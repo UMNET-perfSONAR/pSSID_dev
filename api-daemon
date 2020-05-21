@@ -403,6 +403,8 @@ def main():
         	#print "Text-formatted result:"
         	#print
         	#print result_text
+                    
+                #added "local3.*        -/var/log/pSSID" to config file
                 syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
                 syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
                 #print "Here2"
