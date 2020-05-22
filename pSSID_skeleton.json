@@ -53,6 +53,12 @@
                 "flip": "{% flip %}"
             }
         },
+        "example_test_throughput": {
+            "type": "throughput",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+            }
+        },
         "example_test_trace": {
             "type": "trace",
             "spec": {
@@ -64,19 +70,19 @@
     
     "schedules": {
         "example_schedule_PT4H": {
-            "repeat": "PT4H",
-            "sliprand": true,
-            "slip": "PT4H"
+            "repeat": "0 */4 * * *"
         },
         "example_schedule_PT1M": {
-            "repeat": "PT1M",
-            "sliprand": true,
-            "slip": "PT4H"
+            "repeat": "*/1 * * * *"
+        },   
+        "example_schedule_PT1H": {
+            "repeat": "0 * * * *"
+        },   
+        "example_schedule_Tuesday_10AM": {
+            "repeat": "0 10 * * 2"
         },   
         "example_schedule_PT10M": {
-            "repeat": "PT10M",
-            "sliprand": true,
-            "slip": "PT10M"
+            "repeat": "*/10 * * * *"
         }
     },
     
@@ -84,9 +90,17 @@
         "example_task_rtt": {
             "test": "example_test_rtt",
             "archives": [ "example_esmond_archive" ],
-            "schedule": "example_schedule_PT1M",
+            "schedule": "example_schedule_PT1H",
             "_meta": {
                 "display-name": "Example RTT Tests"
+            }
+        },
+        "example_task_throughput": {
+            "test": "example_test_throughput",
+            "archives": [ "example_esmond_archive" ],
+            "schedule": "example_schedule_PT4H",
+            "_meta": {
+                "display-name": "Example Throughput Tests"
             }
         }
     }
