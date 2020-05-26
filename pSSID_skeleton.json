@@ -21,7 +21,7 @@
     "SSID_list": {
         "MWireless": {
             "name": "MWireless",
-            "threshold": "55",
+            "min_signal": "55",
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
@@ -30,7 +30,7 @@
         },
         "EduRoam": {
             "name": "EduRoam",
-            "threshold": "50",
+            "min_signal": "50",
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
