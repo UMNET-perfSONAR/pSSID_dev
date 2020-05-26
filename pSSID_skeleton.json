@@ -18,6 +18,27 @@
         "FILL_IN_ADDRESS_NAME_2": { "address": "FILL_IN_HOSTNAME_OR_IP_2" }
     },
     
+    "SSID_list": {
+        "MWireless": {
+            "name": "MWireless",
+            "threshold": "55",
+            "AuthMethod": {
+                "type": "User",
+                "UID": "fakeUID",
+                "Password": "fakepassword"
+            }
+        },
+        "EduRoam": {
+            "name": "EduRoam",
+            "threshold": "50",
+            "AuthMethod": {
+                "type": "User",
+                "UID": "fakeUID",
+                "Password": "fakepassword"
+            }
+        }
+    },
+    
     "groups": {
         "example_group_mesh": {
             "type": "mesh",
