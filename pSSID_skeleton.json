@@ -109,6 +109,7 @@
     
     "tasks": {
         "example_task_rtt": {
+            "SSIDs": [ "MWireless", "EduRoam" ],
             "test": "example_test_rtt",
             "archives": [ "example_esmond_archive" ],
             "schedule": "example_schedule_PT1H",
