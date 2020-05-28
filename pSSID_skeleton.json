@@ -112,7 +112,7 @@
             "SSIDs": [ "MWireless", "EduRoam" ],
             "test": "example_test_rtt",
             "archives": [ "example_esmond_archive" ],
-            "schedule": "example_schedule_PT1H",
+            "schedule": [ "example_schedule_PT1H", "example_schedule_Tuesday_10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
