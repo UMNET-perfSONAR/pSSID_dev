@@ -90,19 +90,22 @@
     },
     
     "schedules": {
-        "example_schedule_PT4H": {
+        "schedule_every_4_hours": {
             "repeat": "0 */4 * * *"
         },
-        "example_schedule_PT1M": {
+        "schedule_every_minute": {
             "repeat": "*/1 * * * *"
         },   
-        "example_schedule_PT1H": {
+        "schedule_every_hour": {
             "repeat": "0 * * * *"
         },   
-        "example_schedule_Tuesday_10AM": {
+        "schedule_Tuesday_10AM": {
             "repeat": "0 10 * * 2"
         },   
-        "example_schedule_PT10M": {
+        "schedule_Tuesday_10:10AM": {
+            "repeat": "10 10 * * 2"
+        },   
+        "schedule_10_minutes": {
             "repeat": "*/10 * * * *"
         }
     },
@@ -112,15 +115,16 @@
             "SSIDs": [ "MWireless", "EduRoam" ],
             "test": "example_test_rtt",
             "archives": [ "example_esmond_archive" ],
-            "schedule": [ "example_schedule_PT1H", "example_schedule_Tuesday_10AM" ],
+            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
         },
         "example_task_throughput": {
+            "SSIDs": [ "MWireless", "EduRoam" ],
             "test": "example_test_throughput",
             "archives": [ "example_esmond_archive" ],
-            "schedule": "example_schedule_PT4H",
+            "schedule": "schedule_every_4_hours",
             "_meta": {
                 "display-name": "Example Throughput Tests"
             }
