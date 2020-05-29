@@ -1,0 +1,116 @@
+---
+# tasks file for elastic-installer
+
+# Install the elastic repos and base OS updates
+- name: "{{ ansible_os_family }} Install"
+  tags: [ 'ps::install' ]
+  include: "{{ ansible_os_family }}.yml"
+  when: ansible_os_family | default('') != ''
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+  register: sel
+
+- name: reboot
+  reboot:
+  when: sel.changed
+
+- name: download erlang
+  yum:
+   name: http://packages.erlang-solutions.com/erlang-solutions-1.0-1.noarch.rpm
+   state: present
+
+- name: import elasticsearch key
+  rpm_key:
+   key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+   state: present
+ 
+#XXX copy
+- name: copying elastic repo
+  get_url:
+    url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/files/elastic.repo
+    dest: /etc/yum.repos.d/elastic.repo
+
+- name: copying rabbitmq repo
+  get_url:
+    url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/central-archive/files/rabbit.repo
+    dest: /etc/yum.repos.d/rabbit.repo
+
+- name: yum clean all
+  command: yum clean all
+  args:
+    warn: no
+
+- name: install package
+  yum:
+    name:
+      - gcc
+      - kernel-devel
+      - kernel-headers
+      - dkms
+      - make
+      - bzip2
+      - python3
+      - python3-requests
+      - elasticsearch
+      - erlang
+      - rabbitmq-server
+      - java-11-openjdk
+    state: present
+    
+    - name: newer java for logstash
+  get_url:
+    url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/files/java.sh
+    dest: /etc/profile.d/java.sh
+
+- name: execute script
+  shell: source /etc/profile.d/java.sh
+
+- name: java 11 setup
+  shell: JAVA_HOME=/usr/lib/jvm/jre-11 yum install -y logstash
+
+- name: copying
+  copy:
+    content: "JAVA_HOME=/usr/share/elasticsearch/jdk"
+    dest: /etc/sysconfig/logstash
+
+- name: reload daemon
+  systemd:
+    daemon_reexec: yes
+
+- name: start rabbitmq
+  systemd:
+    enabled: yes
+    name: rabbitmq-server
+    state: started
+
+- name: enable rabbitmq-management
+  rabbitmq_plugin:
+    names: rabbitmq_management
+    state: enabled
+  
+  - name: create dir
+  file:
+    path: /usr/lib/perfsonar/scripts
+    state: directory
+    mode: '0755'
+
+- name: load script
+  get_url:
+    url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/scripts/pselastic_secure.sh
+    dest: /usr/lib/perfsonar/scripts/pselastic_secure.sh
+    mode: 755
+
+- name: copy andys stuff
+  copy:
+    src: pselastic_setup
+    dest: /usr/lib/
+
+- name: run secure script
+  shell: /usr/lib/perfsonar/scripts/pselastic_secure.sh
+
+add chmodes to .py files and the script itself
+ 
+
+   
