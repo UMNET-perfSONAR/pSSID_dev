@@ -126,7 +126,7 @@
             "task_priority": "1",
             "test": "example_test_throughput",
             "archives": [ "example_esmond_archive" ],
-            "schedule": "schedule_every_4_hours",
+            "schedule": [ "schedule_every_4_hours" ],
             "_meta": {
                 "display-name": "Example Throughput Tests"
             }
