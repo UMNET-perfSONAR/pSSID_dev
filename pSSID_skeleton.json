@@ -113,6 +113,7 @@
     "tasks": {
         "example_task_rtt": {
             "SSIDs": [ "MWireless", "EduRoam" ],
+            "task_priority": "0",
             "test": "example_test_rtt",
             "archives": [ "example_esmond_archive" ],
             "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
@@ -122,6 +123,7 @@
         },
         "example_task_throughput": {
             "SSIDs": [ "MWireless", "EduRoam" ],
+            "task_priority": "1",
             "test": "example_test_throughput",
             "archives": [ "example_esmond_archive" ],
             "schedule": "schedule_every_4_hours",
