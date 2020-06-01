@@ -25,7 +25,7 @@
   rpm_key:
    key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
    state: present
- 
+
 #XXX copy
 - name: copying elastic repo
   get_url:
@@ -58,8 +58,9 @@
       - rabbitmq-server
       - java-11-openjdk
     state: present
-    
-    - name: newer java for logstash
+
+
+- name: newer java for logstash
   get_url:
     url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/files/java.sh
     dest: /etc/profile.d/java.sh
@@ -89,28 +90,135 @@
   rabbitmq_plugin:
     names: rabbitmq_management
     state: enabled
-  
-  - name: create dir
+
+- name: enable elastic
+  systemd:
+    enabled: yes
+    name: elasticsearch.service
+    state: started
+
+- name: create dir
   file:
     path: /usr/lib/perfsonar/scripts
     state: directory
-    mode: '0755'
+    mode: 0755
 
 - name: load script
   get_url:
     url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/scripts/pselastic_secure.sh
     dest: /usr/lib/perfsonar/scripts/pselastic_secure.sh
-    mode: 755
+    mode: 0755
 
 - name: copy andys stuff
   copy:
     src: pselastic_setup
     dest: /usr/lib/
+    mode: 0755
 
 - name: run secure script
   shell: /usr/lib/perfsonar/scripts/pselastic_secure.sh
 
-add chmodes to .py files and the script itself
- 
+#XXX add chmodes to .py files and the script itself
 
-   
+- name: add user
+  rabbitmq_user:
+    user: elastic
+    password: elastic
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    state: present
+
+
+- name: copy logstash
+  copy:
+    src: "{{item}}"
+    dest: /etc/logstash/conf.d/
+  with_fileglob:
+    - logstash_pipeline/*
+
+- name: more logstash
+  get_url:
+    url: https://raw.githubusercontent.com/perfsonar/archiving-sandbox/master/toolkit/files/99-outputs.conf
+    dest: /etc/logstash/conf.d/99-outputs.conf
+    force: yes
+
+- name: create a link
+  file:
+    src: /etc/logstash/conf.d
+    dest: /usr/share/logstash/pipeline
+    state: link
+
+- name: enable logstash
+  systemd:
+    enabled: yes
+    name: logstash.service
+    state: started
+
+- name: get kibana key
+  rpm_key:
+   key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+   state: present
+
+- name: get kibana
+  get_url:
+    url: "https://artifacts.elastic.co/downloads/kibana/kibana-7.7.0-x86_64.rpm"
+    dest: ~/ansible
+
+- name: install kibana
+  yum:
+    name: kibana
+    state: present
+
+- name: reload daemon
+  systemd:
+    daemon_reload: yes
+
+- name: start kibana
+  systemd:
+    enabled: yes
+    name: kibana.service
+    state: started
+
+- name: setup kibana listening
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: "^#server.host: "
+    line: "server.host: \"0.0.0.0\""
+
+- name: hostname
+  slurp:
+    src: /etc/perfsonar/elastic/auth_setup.out
+  register: p
+
+- name: Set Password
+  set_fact:
+    your_password: "{{ p['content'] | b64decode | regex_findall('elastic = (.*)')| first }}"
+- name: input password
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '^#elasticsearch.password: '
+    line: "elasticsearch.password: {{your_password}}"
+
+- name: more formatting
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '^#elasticsearch.username: '
+    line: "elasticsearch.username: \"kibana\""
+
+- name: authencation off
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '^xpack.security.enabled: '
+    line: "xpack.security.enabled: false"
+
+- name: reload elasticsearch
+  systemd:
+    name: elasticsearch.service
+    state: reloaded
+
+- name: reload kibana
+  systemd:
+    name: kibana.service
+    state: reloaded
