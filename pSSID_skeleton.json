@@ -9,7 +9,7 @@
             "data": {
                 "measurement-agent": "{% scheduled_by_address %}",
                 "routing-key": "pscheduler_raw",
-                "url": "amqp://elastic:elastic@elastic""
+                "url": "amqp://elastic:elastic@elastic"
             }
         }
     },
