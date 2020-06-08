@@ -18,6 +18,7 @@ import urllib
 from dateutil.tz import tzlocal
 import argparse
 import syslog
+import pika
 
 
 # -----------------------------------------------------------------------------
