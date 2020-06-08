@@ -16,6 +16,8 @@ import time
 import urllib
 
 from dateutil.tz import tzlocal
+import argparse
+import syslog
 
 
 # -----------------------------------------------------------------------------
@@ -27,6 +29,18 @@ from dateutil.tz import tzlocal
 
 # Turn this on to dump the JSON fetched during intermediate steps.
 VERBOSE = True
+
+
+parser = argparse.ArgumentParser(description='output options')
+parser.add_argument('-o', action='store_true',
+  help='stdout')
+parser.add_argument('-s', action='store_true',
+  help='syslog')
+parser.add_argument('-q', action='store_true',
+  help='rabbitmq')
+
+args = parser.parse_args()
+
 
 
 # This was exported from the command-line interface with the schedule
@@ -246,8 +260,8 @@ except Exception as ex:
     fail("Unable to post task: %s" % (str(ex)))
 
 
-print
-print "New task is", task_url
+# print
+# print "New task is", task_url
 
 
 # -----------------------------------------------------------------------------
@@ -269,12 +283,12 @@ try:
 except KeyError:
     fail("Server returned incomplete data.")
 
-if VERBOSE:
-    print
-    print
-    print "Task with server-added detail:"
-    print
-    print json_dump(task_data)
+# if VERBOSE:
+#     print
+#     print
+#     print "Task with server-added detail:"
+#     print
+#     print json_dump(task_data)
 
 
 # -----------------------------------------------------------------------------
@@ -296,14 +310,14 @@ for key in ["start-time", "end-time", "result-href"]:
     if key not in run_data:
         fail("Server did not return %s with run data" % (key))
 
-print
-print "First run is", run_data["href"]
+# print
+# print "First run is", run_data["href"]
 
-if VERBOSE:
-    print
-    print "Data about first run:"
-    print
-    print json_dump(run_data)
+# if VERBOSE:
+#     print
+#     print "Data about first run:"
+#     print
+#     print json_dump(run_data)
 
 
 # -----------------------------------------------------------------------------
@@ -324,8 +338,8 @@ sleep_seconds = (sleep_time.days * 86400) \
                 + (sleep_time.seconds) \
                 + (sleep_time.microseconds / (10.0**6))
 
-print
-print "Waiting", sleep_seconds, "seconds for run to finish..."
+# print
+# print "Waiting", sleep_seconds, "seconds for run to finish..."
 time.sleep(sleep_seconds)
 
 
@@ -335,19 +349,19 @@ time.sleep(sleep_seconds)
 # Wait for the result to be produced and fetch it.
 #
 
-print
-print "Waiting for result at", run_data["result-href"]
+# print
+# print "Waiting for result at", run_data["result-href"]
 
 status, result_data = url_get(run_data["result-href"],
                               params={"wait-merged": True})
 if status != 200:
     fail("Did not get a result: %s" % (result_data))
 
-print
-print
-print "JSON Result:"
-print
-print json_dump(result_data)
+# print
+# print
+# print "JSON Result:"
+# print
+# print json_dump(result_data)
 
 
 # -----------------------------------------------------------------------------
@@ -372,12 +386,27 @@ status, result_text = url_get(run_data["result-href"],
 if status != 200:
     fail("Did not get a result: %s" % (result_text))
 
-print
-print
-print "Text-formatted result:"
-print
-print result_text
+# print
+# print
+# print "Text-formatted result:"
+# print
+# print result_text
 
+if(args.o):
+    #stdout print
+    print
+    print
+    print "JSON Result:"
+    print
+    print json_dump(result_data)
+elif(args.s):
+    #syslog print
+    syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
+    syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
+    syslog.closelog()
+elif(args.q):
+    #rabbitmq
+    #the result_data is the json object
 
 # -----------------------------------------------------------------------------
 
