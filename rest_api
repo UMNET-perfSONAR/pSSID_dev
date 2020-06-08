@@ -31,16 +31,6 @@ import syslog
 VERBOSE = True
 
 
-parser = argparse.ArgumentParser(description='output options')
-parser.add_argument('-o', action='store_true',
-  help='stdout')
-parser.add_argument('-s', action='store_true',
-  help='syslog')
-parser.add_argument('-q', action='store_true',
-  help='rabbitmq')
-
-args = parser.parse_args()
-
 
 
 # This was exported from the command-line interface with the schedule
@@ -252,161 +242,164 @@ def url_post( url,          # GET URL
 #
 
 tasks_url = "https://%s/pscheduler/tasks" % (LEAD)
-print "Posting to", tasks_url
+#print "Posting to", tasks_url
 
-try:
-    status, task_url = url_post(tasks_url, data=json_dump(TASK))
-except Exception as ex:
-    fail("Unable to post task: %s" % (str(ex)))
-
-
-# print
-# print "New task is", task_url
+def main(TASK, o=False, s=False, q=False)
+    try:
+        status, task_url = url_post(tasks_url, data=json_dump(TASK))
+    except Exception as ex:
+        fail("Unable to post task: %s" % (str(ex)))
 
 
-# -----------------------------------------------------------------------------
+    # print
+    # print "New task is", task_url
 
-#
-# Fetch the posted task with extra details.
-#
 
-try:
-    status, task_data = url_get(task_url, params={"detail": True})
+    # -----------------------------------------------------------------------------
+
+    #
+    # Fetch the posted task with extra details.
+    #
+
+    try:
+        status, task_data = url_get(task_url, params={"detail": True})
+        if status != 200:
+            raise Exception(task_data)
+    except Exception as ex:
+        fail("Failed to post task: %s" % (str(ex)))
+
+
+    try:
+        first_run_url = task_data["detail"]["first-run-href"]
+    except KeyError:
+        fail("Server returned incomplete data.")
+
+    # if VERBOSE:
+    #     print
+    #     print
+    #     print "Task with server-added detail:"
+    #     print
+    #     print json_dump(task_data)
+
+
+    # -----------------------------------------------------------------------------
+
+    #
+    # Get first run and make sure we have what we need to function.  The
+    # server will wait until the first run has been scheduled before
+    # returning a result.
+    #
+
+    status, run_data = url_get(first_run_url)
+
+    if status == 404:
+        fail("The server never scheduled a run for the task.")
     if status != 200:
-        raise Exception(task_data)
-except Exception as ex:
-    fail("Failed to post task: %s" % (str(ex)))
+        fail("Error %d: %s" % (status, run_data))
+
+    for key in ["start-time", "end-time", "result-href"]:
+        if key not in run_data:
+            fail("Server did not return %s with run data" % (key))
+
+    # print
+    # print "First run is", run_data["href"]
+
+    # if VERBOSE:
+    #     print
+    #     print "Data about first run:"
+    #     print
+    #     print json_dump(run_data)
 
 
-try:
-    first_run_url = task_data["detail"]["first-run-href"]
-except KeyError:
-    fail("Server returned incomplete data.")
+    # -----------------------------------------------------------------------------
 
-# if VERBOSE:
-#     print
-#     print
-#     print "Task with server-added detail:"
-#     print
-#     print json_dump(task_data)
+    #
+    # Wait for the end time to pass
+    #
 
+    try:
+        # The end time comes back as ISO 8601.  Parse it.
+        end_time = dateutil.parser.parse(run_data["end-time"])
+    except ValueError as ex:
+        fail("Server did not return a valid end time for the task: %s" % (str(ex)))
 
-# -----------------------------------------------------------------------------
+    now = datetime.datetime.now(tzlocal())
+    sleep_time = end_time - now if end_time > now else datetime.timedelta()
+    sleep_seconds = (sleep_time.days * 86400) \
+                    + (sleep_time.seconds) \
+                    + (sleep_time.microseconds / (10.0**6))
 
-#
-# Get first run and make sure we have what we need to function.  The
-# server will wait until the first run has been scheduled before
-# returning a result.
-#
-
-status, run_data = url_get(first_run_url)
-
-if status == 404:
-    fail("The server never scheduled a run for the task.")
-if status != 200:
-    fail("Error %d: %s" % (status, run_data))
-
-for key in ["start-time", "end-time", "result-href"]:
-    if key not in run_data:
-        fail("Server did not return %s with run data" % (key))
-
-# print
-# print "First run is", run_data["href"]
-
-# if VERBOSE:
-#     print
-#     print "Data about first run:"
-#     print
-#     print json_dump(run_data)
+    # print
+    # print "Waiting", sleep_seconds, "seconds for run to finish..."
+    time.sleep(sleep_seconds)
 
 
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
-#
-# Wait for the end time to pass
-#
+    #
+    # Wait for the result to be produced and fetch it.
+    #
 
-try:
-    # The end time comes back as ISO 8601.  Parse it.
-    end_time = dateutil.parser.parse(run_data["end-time"])
-except ValueError as ex:
-    fail("Server did not return a valid end time for the task: %s" % (str(ex)))
+    # print
+    # print "Waiting for result at", run_data["result-href"]
 
-now = datetime.datetime.now(tzlocal())
-sleep_time = end_time - now if end_time > now else datetime.timedelta()
-sleep_seconds = (sleep_time.days * 86400) \
-                + (sleep_time.seconds) \
-                + (sleep_time.microseconds / (10.0**6))
+    status, result_data = url_get(run_data["result-href"],
+                                  params={"wait-merged": True})
+    if status != 200:
+        fail("Did not get a result: %s" % (result_data))
 
-# print
-# print "Waiting", sleep_seconds, "seconds for run to finish..."
-time.sleep(sleep_seconds)
+    # print
+    # print
+    # print "JSON Result:"
+    # print
+    # print json_dump(result_data)
 
 
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
-#
-# Wait for the result to be produced and fetch it.
-#
+    #
+    # If the run succeeded, fetch a plain-text version of the result.
+    #
+    # This fetches the same endpoint as above but doesn't wait for the
+    # merged (finished) result and asks for it in text format.  Supported
+    # formats are application/json, text/plain and text/html.  Note that
+    # not all tests generate proper text/html.
+    #
 
-# print
-# print "Waiting for result at", run_data["result-href"]
-
-status, result_data = url_get(run_data["result-href"],
-                              params={"wait-merged": True})
-if status != 200:
-    fail("Did not get a result: %s" % (result_data))
-
-# print
-# print
-# print "JSON Result:"
-# print
-# print json_dump(result_data)
+    if not result_data["succeeded"]:
+        fail("Test failed to run properly.")
 
 
-# -----------------------------------------------------------------------------
+    status, result_text = url_get(run_data["result-href"],
+                                  params={"format": "text/plain"},
+                                  json=False)
 
-#
-# If the run succeeded, fetch a plain-text version of the result.
-#
-# This fetches the same endpoint as above but doesn't wait for the
-# merged (finished) result and asks for it in text format.  Supported
-# formats are application/json, text/plain and text/html.  Note that
-# not all tests generate proper text/html.
-#
+    if status != 200:
+        fail("Did not get a result: %s" % (result_text))
 
-if not result_data["succeeded"]:
-    fail("Test failed to run properly.")
+    # print
+    # print
+    # print "Text-formatted result:"
+    # print
+    # print result_text
 
-
-status, result_text = url_get(run_data["result-href"],
-                              params={"format": "text/plain"},
-                              json=False)
-
-if status != 200:
-    fail("Did not get a result: %s" % (result_text))
-
-# print
-# print
-# print "Text-formatted result:"
-# print
-# print result_text
-
-if(args.o):
-    #stdout print
-    print
-    print
-    print "JSON Result:"
-    print
-    print json_dump(result_data)
-elif(args.s):
-    #syslog print
-    syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
-    syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
-    syslog.closelog()
-elif(args.q):
-    #rabbitmq
-    #the result_data is the json object
+    if(args.o):
+        #stdout print
+        print
+        print
+        print "JSON Result:"
+        print
+        print json_dump(result_data)
+    if(args.s):
+        #syslog print
+        syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
+        syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
+        syslog.closelog()
+    if(args.q):
+        #rabbitmq
+        #the result_data is the json object
+        return result_data
+        print
 
 # -----------------------------------------------------------------------------
 
@@ -414,4 +407,17 @@ elif(args.q):
 # The End
 #
 
-exit(0)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='output options')
+    parser.add_argument('-o', action='store_true',
+      help='stdout')
+    parser.add_argument('-s', action='store_true',
+      help='syslog')
+    parser.add_argument('-q', action='store_true',
+      help='rabbitmq')
+
+    args = parser.parse_args()
+
+    main(TASK, args.o, args.s, args.q)
+
+
