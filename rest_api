@@ -18,6 +18,7 @@ import urllib
 from dateutil.tz import tzlocal
 import argparse
 import syslog
+import pika
 
 
 # -----------------------------------------------------------------------------
@@ -370,6 +371,7 @@ def main(TASK, o=False, s=False, q=False)
         fail("Test failed to run properly.")
 
 
+<<<<<<< HEAD
     status, result_text = url_get(run_data["result-href"],
                                   params={"format": "text/plain"},
                                   json=False)
@@ -401,6 +403,46 @@ def main(TASK, o=False, s=False, q=False)
         return result_data
         print
 
+=======
+if not result_data["succeeded"]:
+    fail("Test failed to run properly.")
+
+
+status, result_text = url_get(run_data["result-href"],
+                              params={"format": "text/plain"},
+                              json=False)
+
+if status != 200:
+    fail("Did not get a result: %s" % (result_text))
+
+# print
+# print
+# print "Text-formatted result:"
+# print
+# print result_text
+
+if(args.o):
+    #stdout print
+    print
+    print
+    print "JSON Result:"
+    print
+    print json_dump(result_data)
+elif(args.s):
+    #syslog print
+    syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
+    syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
+    syslog.closelog()
+elif(args.q):
+    message = json_dump(result_data)
+    #rabbitmq
+    #the result_data is the json object
+    connection = pika.BlockingConnection(pika.URLParameters("amqp://elastic:elastic@elastic"))
+    channel = connection.channel()
+    channel.basic_publish(exchange="",routing_key= "pscheduler_raw", body = message)
+    channel.close()
+    connection.close()
+>>>>>>> 22bf5e393ddf5a861888e356e920dd9c20e4b9b8
 # -----------------------------------------------------------------------------
 
 #
