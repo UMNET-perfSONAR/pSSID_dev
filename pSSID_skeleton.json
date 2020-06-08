@@ -4,11 +4,12 @@
     },
     
     "archives": {
-        "example_esmond_archive": {
-            "archiver": "esmond",
+        "example_rabbitmq_archive": {
+            "archiver": "rabbitmq",
             "data": {
                 "measurement-agent": "{% scheduled_by_address %}",
-                "url": "https://FILL_IN_ESMOND_HOSTNAME_OR_IP/esmond/perfsonar/archive/"
+                "routing-key": "pscheduler_raw",
+                "url": "amqp://elastic:elastic@elastic""
             }
         }
     },
@@ -115,7 +116,7 @@
             "SSIDs": [ "MWireless", "EduRoam" ],
             "task_priority": "2",
             "test": "example_test_rtt",
-            "archives": [ "example_esmond_archive" ],
+            "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
@@ -125,7 +126,7 @@
             "SSIDs": [ "MWireless", "EduRoam" ],
             "task_priority": "1",
             "test": "example_test_throughput",
-            "archives": [ "example_esmond_archive" ],
+            "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_4_hours" ],
             "_meta": {
                 "display-name": "Example Throughput Tests"
