@@ -384,13 +384,13 @@ def main(TASK, o=False, s=False, q=False)
     # print
     # print result_text
 
-    if(args.o):
+    #if(args.o):
         #stdout print
-        print
-        print
-        print "JSON Result:"
-        print
-        print json_dump(result_data)
+    print
+    print
+    print "JSON Result:"
+    print
+    print json_dump(result_data)
     if(args.s):
         #syslog print
         syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
@@ -415,15 +415,15 @@ def main(TASK, o=False, s=False, q=False)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='output options')
-    parser.add_argument('-o', action='store_true',
-      help='stdout')
+    #parser.add_argument('-o', action='store_true',
+     # help='stdout')
     parser.add_argument('-s', action='store_true',
       help='syslog')
     parser.add_argument('-q', action='store_true',
       help='rabbitmq')
 
     args = parser.parse_args()
-
-    main(TASK, args.o, args.s, args.q)
+#args o removed
+    main(TASK, args.s, args.q)
 
 
