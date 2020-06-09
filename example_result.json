@@ -5,6 +5,7 @@
     "ESSID": "X:X:X:X",
     "AP": "X.X.X.X",
     "task": "task_name",
+    "test": "test_name",
     "succeeded": false,
     "error": "this is filled in if succeded is False",
     "result": "pScheduler type JSON result if succeded is True"    
