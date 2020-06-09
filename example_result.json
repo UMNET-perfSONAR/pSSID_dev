@@ -1,7 +1,4 @@
 {
-    "_meta":{
-        "display-name": "Example Measurements"
-    },
     "Schema": "A",
     "SSID": "MWireless",
     "BSSID": "X:X:X:X",
