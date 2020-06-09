@@ -1,5 +1,6 @@
 {
     "Schema": "A",
+    "Time": "YYYY-DD-HH-MM-SS",
     "SSID": "MWireless",
     "BSSID": "X:X:X:X",
     "ESSID": "X:X:X:X",
