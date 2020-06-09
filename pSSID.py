@@ -1,3 +1,38 @@
+from parse_config import Parse, tests
+from schedule import Schedule
+import argparse
+import daemon
+import sys
+
+
+parser = argparse.ArgumentParser(description='pSSID')
+parser.add_argument('file', action='store',
+  help='json file')
+parser.add_argument('--debug', action='store_true',
+  help='sanity check')
+
+args = parser.parse_args()
+
+config_file = open(args.file, "r")
+parsed_file = Parse(config_file)
+s = Schedule(parsed_file)
+config_file.close()
+
+def debug():
+    
+    #print parsed objects
+    tests(parsed_file)
+
+    #send first runs to syslog    
+    s.initial_schedule()
+    s.print_queue()
+
+
+if args.debug:
+    with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, 
+        working_directory='/home/vagrant'):
+        debug()
+
 # read config file
 # call function in parse_config.py
 # parse_config.py sub-main will validate that the config file is correct

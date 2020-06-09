@@ -132,25 +132,7 @@ class Parse:
 
 
 
-
-#sub-main for testing purposes
-#also serves as usage
-
-if __name__ == "__main__":
-
-    if len(sys.argv) < 2:
-        print "ERROR: Provide JSON file"
-        print "USAGE: python %s filename.json" % sys.argv[0]
-        exit(1)
-    elif len(sys.argv) > 2: 
-        print "ERROR: Only Provide JSON file"
-        print "USAGE: python %s filename.json" % sys.argv[0]
-        exit(1)
-
-    config_file = open(sys.argv[1], "r")
-
-    p = Parse(config_file)
-
+def tests(p):
     #single dict test:
     #optionally use psjson.json_dump() to pretty print
     print("SINGLE")
@@ -187,34 +169,30 @@ if __name__ == "__main__":
     print
     print
 
-
     #TODO XXX: more tests
 
+#sub-main for testing purposes
+#also serves as usage
+
+if __name__ == "__main__":
+
+    if len(sys.argv) < 2:
+        print "ERROR: Provide JSON file"
+        print "USAGE: python %s filename.json" % sys.argv[0]
+        exit(1)
+    elif len(sys.argv) > 2: 
+        print "ERROR: Only Provide JSON file"
+        print "USAGE: python %s filename.json" % sys.argv[0]
+        exit(1)
+
+    config_file = open(sys.argv[1], "r")
+
+    p = Parse(config_file)
+    tests(p)    
+
+
+    
 
     exit(0)
 
-#DEBUG:
-    
-        # try:
-        #     #Attaching schedule
-        #     taskobj["Sched"] = []
-        #     schedlist = self.tasks[given_task]["schedule"]
 
-        #     for i in schedlist:
-        #         tasksched = self.schedules[i]
-        #         taskobj["Sched"].append(CronTab(str(tasksched["repeat"])))
-        # except:
-        #     print("ERROR in retrieving \"schedule\" from", given_task)
-        #     print(traceback.print_exc())
-
-        # try:
-        #     #Attaching SSIDs 
-        #     taskobj["SSIDs"] = []
-        #     ssidlist = self.tasks[given_task]["SSIDs"]
-
-        #     for i in ssidlist:
-        #         ssid = self.SSID_list[i]
-        #         taskobj["SSIDs"].append(ssid)
-        # except:
-        #     print("ERROR in retrieving \"SSIDs\" from", given_task)
-        #     print(traceback.print_exc())

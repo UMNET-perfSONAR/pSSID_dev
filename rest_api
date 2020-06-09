@@ -245,7 +245,7 @@ def url_post( url,          # GET URL
 tasks_url = "https://%s/pscheduler/tasks" % (LEAD)
 #print "Posting to", tasks_url
 
-def main(TASK, o=False, s=False, q=False)
+def main(TASK, o=False, s=False, q=False):
     try:
         status, task_url = url_post(tasks_url, data=json_dump(TASK))
     except Exception as ex:
