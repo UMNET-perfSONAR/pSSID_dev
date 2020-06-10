@@ -159,10 +159,10 @@ while True:
         #  3. send "complete" result to archiver
         #  To do step three: extra file archive.py
         #  archive.py has a sub-main that sends a given JSON result to an archiver
-        }
+        #}
 
         # log off BSSID (if that's a thing)
-    }
+    #}
     # requeue SSID with schedule.py
-}
+#}
 
