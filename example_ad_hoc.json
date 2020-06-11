@@ -1,0 +1,7 @@
+{
+    "Schema": "A",
+    "pSSID_node": "IP_ADDR",
+    "Time": "YYYY-DD-HH-MM-SS",
+    "SSID": "MWireless",
+    "test": "pscheduler_test_spec"
+}
