@@ -73,7 +73,7 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    if ( caught SIGCHLD ) {
 		# child exited before ttl elapsed
 		clean up child
-	    } else 
+	    } else {
 		# if we are here we have a child that has run too long
 		kill child PID
 	    }
