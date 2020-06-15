@@ -1,0 +1,148 @@
+################################################################################
+# single process, no blocking:
+################################################################################
+
+    loop ( forever ) {
+	if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	run_task()
+	reschedule_task( task.cron )
+    }
+
+
+################################################################################
+# blocking on single task, only one child process
+################################################################################
+
+    pid_child = 0
+    loop ( forever ) {
+	if ( pid_child != 0 ) {
+	    # here we are the parent of a working child process
+	    # wait for the child process to finish before we continue
+	    waitpid( pid_child, 0 )
+	    pid_child = 0
+	    reschedule_task( task.cron )
+	} else if ( task.time_scheduled > current_time ) {
+	    # we have no child processes
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	pid_child = fork()
+
+	if ( pid_child == 0 ) {
+	    # here we're the child
+	    run_task();
+	    exit( 0 );
+	}
+    }
+
+
+################################################################################
+# not blocking on single task, only one child process, child time limit
+################################################################################
+https://sites.google.com/a/taelon.net/ciar/things/python/fork
+
+    set up signal handlers
+
+    pid_child = 0;
+
+    loop ( forever ) {
+	if ( pid_child != 0 ) {
+	    # here we are the parent of a working child process
+	    # wait ttl or the child process to finish before we continue
+	    waitpid( pid_child, task.ttl )
+	} else if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	if ( pid_child != 0 ) {
+	    if ( caught SIGCHLD ) {
+		# child exited before ttl elapsed
+		clean up child
+	    } else 
+		# if we are here we have a child that has run too long
+		kill child PID
+	    }
+
+	    pid_child = 0;
+	    reschedule_task( task.cron )
+	    continue;
+	}
+
+	pid_child = fork()
+
+	if ( pid_child == 0 ) {
+	    # here we're the child
+	    run_task();
+	    exit( 0 );
+	}
+    }
+
+
+################################################################################
+# not blocking on single task, single child process with time limit, RabbitMQ
+################################################################################
+
+    set up RabbitMQ
+
+    set up signal handlers
+
+    pid_child = 0;
+
+    loop ( forever ) {
+	if ( pid_child != 0 ) {
+	    # here we are the parent of a working child process
+	    # wait ttl or the child process to finish before we continue
+	    waitpid( pid_child, task.ttl )
+	} else if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	if ( RabbitMQ is ready to send us a message ) {
+	    clear handlers
+	    receive Rabbit message
+	    do actions
+	    continue;
+	}
+
+	if ( pid_child != 0 ) {
+	    if ( caught SIGCHLD ) {
+		# child exited before ttl elapsed
+		clean up child
+	    } else 
+		# if we are here we have a child that has run too long
+		kill child PID
+	    }
+
+	    pid_child = 0;
+	    reschedule_task( task.cron )
+	    continue;
+	}
+
+	pid_child = fork()
+
+	if ( pid_child == 0 ) {
+	    # here we're the child
+	    run_task();
+	    exit( 0 );
+	}
+    }
+
