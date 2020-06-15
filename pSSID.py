@@ -130,39 +130,44 @@ while True:
 
 # loop forever () {
 
-#   next task - current time = sleep until SSID test time
+#  # compute sleep time
+#  if ( interface_in_use == True ) {
+#    # sleep forever
+#    sleep_time = -1
+#  } else {
+#    if ( task.scheduled_time < current_time ) {
+#       # run a task immediately (underwater)
+#       sleep_time = 0;
+#    } else {
+#       sleep_time = task.scheduled_time - current_time;
+#    } 
+#  }
+#  
+
+# if sleep_time == -1, that means sleep_forever
+# sleep( sleep_time )
+# if ( pid_child != 0 ) {
+#    os.waitpid( child, sleep_time );
+# else 
+#    sleep( sleep_time )
+
+# if ( finished_tasks ) {  # signals
+#    cleanup_finished_tasks();
+#      - interface_in_use = False
+#      - requeue task
+#      - pid_child = 0;
+#    continue;
+# }
 
 # here it is time to execute a task
+#    execute_task( TASK );
+#      - existing other process that will signal when it's done
+#      - interface_in_use = True
+#      - pid_child  = child's pid
+# 
+#    requeue_task( TASK );
 
-# scan task SSID for component BSSID
-# use file ssid_scan.py
-# ssid_scan.py sub main function will print out list of all BSSIDs for each SSID in the config
-# signal strength, BSSID name, etc.
 
-# foreach ( BSSID in SSID ) {
-        # decide if we connect to this BSSID
-        # min_signal per SSID
-
-        # connect to the BSSID with given Credentials / Mechanism
-        #   - gather connection data/metadata
-        #  use file connect_bssid.py
-        #  connect_bbsid.py sub-main will connect to given BSSID
-        #  "by hand" use ssid_scan.py for list of BSSIDs, feed that to connect_bbsid.py
-
-        # foreach ( TEST in BSSID TASK LIST ) {
-        #   run test with pScheduler
-        #  talk to pScheduler with rest.py
-        #  rest.py sub-main takes test spec runs it against localhost pscheduler
-        #  receive a result then archive results with connection metadata
-        #  1. receive result from pscheduler
-        #  2. add connection metadata to result JSON
-        #  3. send "complete" result to archiver
-        #  To do step three: extra file archive.py
-        #  archive.py has a sub-main that sends a given JSON result to an archiver
-        #}
-
-        # log off BSSID (if that's a thing)
-    #}
-    # requeue SSID with schedule.py
+# requeue SSID with schedule.py
 #}
 
