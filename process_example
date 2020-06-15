@@ -61,15 +61,7 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    # here we are the parent of a working child process
 	    # wait ttl or the child process to finish before we continue
 	    waitpid( pid_child, task.ttl )
-	} else if ( task.time_scheduled > current_time ) {
-	    # run some time in the future
-	    sleep_time = task.time_scheduled - current_time
-	    sleep( sleep_time )
-	} else {
-	    # run immediately, we're behind schedule
-	}
 
-	if ( pid_child != 0 ) {
 	    if ( caught SIGCHLD ) {
 		# child exited before ttl elapsed
 		clean up child
@@ -81,6 +73,13 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    pid_child = 0;
 	    reschedule_task( task.cron )
 	    continue;
+
+	} else if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
 	}
 
 	pid_child = fork()
