@@ -197,13 +197,8 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    # build table of SSIDs we care about and component BSSIDs
 	    SSID_scan()
 	} else {
-	    foreach( BSSID ) {
-		prequalify based on 
-		    - signal strength
-		    - bandwidth
-		    - other?
-	    }
-
+	    new_BSSID_list( existimg_list, SSID_name, min_signal_strength )
+	
 	    TTL = number of prequalified BSSIDs * TTL seconds
 
 	    if ( TTL == 0 ) {
