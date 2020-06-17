@@ -233,9 +233,9 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    continue;
 	}
 	
-	if ( last BSSID scan was too long ago ) {
+	if (( no BSSID scan yet ) || ( current_time > next_scan )) {
 	     BSSID_scan();
-	     reset scan time counter
+	     next_scan = current_time + scan_interval
 	}
 	
 	num_BSSID = BSSID_qualify( JSON_BSSID_LIST, SSID_name, min_signal_strength )
@@ -250,7 +250,21 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	if ( pid_child == 0 ) {
 	    # here we're the child
 	    run_task( task );
+	      - foreach BSSID that qualifies
+	        - connect
+		- run tests
 	    exit( 0 );
         }
     }
 
+single_BSSID_qualify( single_BSSID, SSID_name, min_signal )
+
+BSSID_qualify( BSSID_COMPLETE_LIST, SSID_name, min_signal ) {
+  num_qualified = 0;
+  foreach ( BSSID in BSSID_COMPLETE_LIST ) {
+    if ( single_BSSID_qualify( BSSID, SSID_name, min_signal ) == True ) {
+      num_qualified++;
+    }
+  }
+  return( num_qualified )
+}
