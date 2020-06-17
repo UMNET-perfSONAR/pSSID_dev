@@ -235,7 +235,8 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    continue;
 	}
 	
-	if (( scan_expire == 0 ) || ( current_time > scan_expire )) {
+	# note that if scan_expire == 0 current_time will be greater
+	if ( current_time > scan_expire ) {
 	     BSSID_scan();
 	     scan_expire = current_time + scan_interval
 	}
