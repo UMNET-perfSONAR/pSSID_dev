@@ -93,6 +93,46 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 
 
 ################################################################################
+# not blocking on single task, only one child process, child time limit
+# EXAMPLE
+################################################################################
+https://sites.google.com/a/taelon.net/ciar/things/python/fork
+
+    set up signal handlers
+
+    pid_child = 0;
+
+    loop ( forever ) {
+	if ( pid_child != 0 ) {
+	    # here we are the parent of a working child process
+	    # wait ttl or the child process to finish before we continue
+	    waitpid( pid_child, 5 )
+
+	    if ( caught SIGCHLD ) {
+		# child exited before ttl elapsed
+		clean up child
+		print out child exit status
+	    } else {
+		# if we are here we have a child that has run too long
+		kill child PID
+		print out that we killed the child
+	    }
+
+	    pid_child = 0;
+	    continue;
+	}
+
+	pid_child = fork()
+
+	if ( pid_child == 0 ) {
+	    # here we're the child
+	    sleep( random 1-10 seconds)
+	    exit( 0 );
+	}
+    }
+
+
+################################################################################
 # not blocking on single task, single child process with time limit, RabbitMQ
 ################################################################################
 
