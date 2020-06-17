@@ -196,6 +196,8 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
     set up signal handlers
 
     pid_child = 0;
+    
+    scan_expire = 0;
 
     SSID_scan()
 
@@ -233,9 +235,9 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    continue;
 	}
 	
-	if (( no BSSID scan yet ) || ( current_time > next_scan )) {
+	if (( scan_expire == 0 ) || ( current_time > scan_expire )) {
 	     BSSID_scan();
-	     next_scan = current_time + scan_interval
+	     scan_expire = current_time + scan_interval
 	}
 	
 	num_BSSID = BSSID_qualify( JSON_BSSID_LIST, SSID_name, min_signal_strength )
