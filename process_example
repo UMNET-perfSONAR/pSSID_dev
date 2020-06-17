@@ -203,7 +203,7 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	if ( pid_child != 0 ) {
 	    # here we are the parent of a working child process
 	    # wait ttl or the child process to finish before we continue
-	    waitpid( pid_child, task.ttl )
+	    waitpid( pid_child, computed_TTL )
 	} else if ( task.time_scheduled > current_time ) {
 	    # run some time in the future
 	    sleep_time = task.time_scheduled - current_time
@@ -232,27 +232,25 @@ https://sites.google.com/a/taelon.net/ciar/things/python/fork
 	    reschedule_task( task.cron )
 	    continue;
 	}
-
-	if ( task.type == SSID_SCAN ) {
-	    # build table of SSIDs we care about and component BSSIDs
-	    SSID_scan()
-	} else {
-	    new_BSSID_list( existimg_list, SSID_name, min_signal_strength )
 	
-	    TTL = number of prequalified BSSIDs * TTL seconds
-
-	    if ( TTL == 0 ) {
-		# no prequalified BSSIDs
-		continue;
-	    }
-
-	    pid_child = fork( task with prequalified BSSIDs )
-
-	    if ( pid_child == 0 ) {
-		# here we're the child
-		run_task( task );
-		exit( 0 );
-	    }
+	if ( last BSSID scan was too long ago ) {
+	     BSSID_scan();
+	     reset scan time counter
 	}
+	
+	num_BSSID = BSSID_qualify( JSON_BSSID_LIST, SSID_name, min_signal_strength )
+	if ( num_BSSID == 0 ) {
+            continue;
+	}
+	
+	computed_TTL = num_BSSID * task.ttl
+	
+	pid_child = fork( task  )
+	
+	if ( pid_child == 0 ) {
+	    # here we're the child
+	    run_task( task );
+	    exit( 0 );
+        }
     }
 
