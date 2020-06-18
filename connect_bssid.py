@@ -31,7 +31,7 @@ class ResultCallback(CallbackBase):
 
 
 def prepare_connection(ssid, bssid, interface):
-    # Format SSID and BSSID and wpa_supplicant
+    # Format SSID and BSSID for wpa supplicant
     ssid_line = '       ssid="' + ssid + '"'
     bssid_line = '     bssid=' + bssid 
 
@@ -39,6 +39,10 @@ def prepare_connection(ssid, bssid, interface):
     bring_down = ('ip link set ' + interface + ' down')
     flush_config = ('ip addr flush dev ' + interface)
     bring_up = ('ip link set ' + interface + ' up')
+
+    # Add interface to wpa supplicant and dhclient commands
+    run_wpa_supplicant = ('wpa_supplicant -B -c /etc/wpa_supplicant/wpa_supplicant.conf -i ' + interface)
+    dhclient = ('dhclient ' + interface)
 
     # since the API is constructed for CLI it expects certain options to always be set in the context object
     context.CLIARGS = ImmutableDict(connection='local', module_path=['/to/mymodules'], forks=10, become=None,
@@ -88,10 +92,10 @@ def prepare_connection(ssid, bssid, interface):
                 dict(action=dict(module='lineinfile', path='/etc/wpa_supplicant/wpa_supplicant.conf', regexp='^(.*)bssid=(.*)$', line=bssid_line)),
 
                 # Connect to WiFi
-                dict(action=dict(module='command', args='wpa_supplicant -B -c /etc/wpa_supplicant/wpa_supplicant.conf -i wlan0')),
+                dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args='dhclient wlan0'))
+                dict(action=dict(module='command', args=dhclient))
              ]
         )
 
@@ -116,5 +120,3 @@ def prepare_connection(ssid, bssid, interface):
 
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
-
-#prepare_connection('MWireless', '00:08:32:88:69:20')
