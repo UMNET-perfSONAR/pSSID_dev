@@ -47,21 +47,30 @@ while 1:
     
     if(pid_child !=0):
         signal.signal(signal.SIGCHLD, sigh)
+        #XXX: rabbitmq signal handler here (a gloabl bool within to know rabbitmq signal received)
         
-        
+        #debug reasons
         print("")
-        print("PARENT CHILD: %d %d"% (os.getpid(), pid_child))
-
+        print("PARENT CHILD: %d %d"% (os.getpid(), pid_child))        
         list_child()
         
         time.sleep(5)
+        
+        #XXX: if rabbitmq signal recieved (global bool):
+                #do something
+        
+        
+        #XXX: resume parent sleep if necessary
 
         if not child_exited:
           print ("***kill child***", pid_child)
           os.kill(pid_child, signal.SIGKILL) 
 
-
-        list_child()            
+        
+        #debug reasons
+        list_child()
+        
+        #XXX: switch back rabbitmq bool
         child_exited = False
         continue
 
