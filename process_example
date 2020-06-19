@@ -311,4 +311,14 @@ BSSID_qualify( BSSID_COMPLETE_LIST, SSID_name, min_signal ) {
 	    do actions
 	    continue;
 	}
+-------------------------------------
 
+2 programs:
+
+ - write a program that from the CLI reads STDIN until EOF, then prints what it got on STDIN
+  # cat somefile.json > ./stdin_program
+ 
+ rewrite rabbit consumer main loop:
+ 
+  - print out a message to the screen every 5 seconds ("5 second interval")
+  - print out any rabbitMQ mesages that come in as soon as it gets them
