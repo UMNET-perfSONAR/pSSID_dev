@@ -271,3 +271,44 @@ BSSID_qualify( BSSID_COMPLETE_LIST, SSID_name, min_signal ) {
   }
   return( num_qualified )
 }
+
+
+---------------------------------------
+
+    # rabbit MQ select
+    loop ( forever ) {
+	if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    select( RABBIT_SOCKET, READ, sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	if ( RabbitMQ is ready to send us a message ) {
+	    clear handlers
+	    receive Rabbit message
+	    do actions
+	    continue;
+	}
+
+
+---------------------------
+
+    # interrupt sleep with signal
+    loop ( forever ) {
+	if ( task.time_scheduled > current_time ) {
+	    # run some time in the future
+	    sleep_time = task.time_scheduled - current_time
+	    sleep( sleep_time )
+	} else {
+	    # run immediately, we're behind schedule
+	}
+
+	if ( RabbitMQ is ready to send us a message ) {
+	    clear handlers
+	    receive Rabbit message
+	    do actions
+	    continue;
+	}
+
