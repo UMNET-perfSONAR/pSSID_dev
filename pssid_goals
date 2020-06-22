@@ -1,0 +1,36 @@
+
+
+
+0.1
+--------------------------------
+  - daemon runs a cron schedule of tasks
+  - JSON config file can be verified by CLI tools
+  - schedules can be printed by CLI tools
+  - forks child and kills child after certain time
+
+SSID Scanner
+--------------------------------
+  - Still run with no tasks
+  - have a defined SSID list
+    - after a scan
+      - if BSSID is not in the list, warning message
+      - if BSSID is on the wrong channel (freq), warning message
+
+Rabbit Features
+--------------------------------
+  - Can receive RabbitMQ messages in real time
+  - Rabbit messages are done ASAP (put in the queue for current time)
+  - Rabbit ACK
+  - Send Result back on Rabbit
+
+DB features
+--------------------------------
+  - Depends on Rabbit Features
+  - queue is backed by a DB
+  - config file syntax
+  - "behind schedule" behavior defined
+
+Rabbit Features Advanced
+--------------------------------
+  - Depends on DB Features
+  - Rabbit messages are scheduled in the future
