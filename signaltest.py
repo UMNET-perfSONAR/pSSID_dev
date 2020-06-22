@@ -46,22 +46,28 @@ while 1:
     pid_child = os.fork()
     
     if(pid_child !=0):
+        # set up SIGCHLD signal handler
         signal.signal(signal.SIGCHLD, sigh)
-        #XXX: rabbitmq signal handler here (a gloabl bool within to know rabbitmq signal received)
         
-        #debug reasons
+        # process diagnostics
         print("")
         print("PARENT CHILD: %d %d"% (os.getpid(), pid_child))        
         list_child()
         
+        # RMQ step 1: add RMqueue cheching to this call (signal? function?, etc.)
         time.sleep(5)
-        
-        #XXX: if rabbitmq signal recieved (global bool):
-                #do something
-        
-        
-        #XXX: resume parent sleep if necessary
 
+        # we are here if one of three things are true
+        # 1. we need to receive a RabbitMQ message
+        # 2. we need to kill our child process because it's running too long
+        # 3. We received a SIGCHLD and need to clean up
+        
+
+        # RMQ step 2: consume all messages from queue, print to screen
+        #XXX: if rabbitmq signal recieved (global bool):
+                # print out mesage to screen
+                # continue (don't worry about sleep time calc)
+        
         if not child_exited:
           print ("***kill child***", pid_child)
           os.kill(pid_child, signal.SIGKILL) 
@@ -75,7 +81,7 @@ while 1:
         continue
 
     
-    
+    # no changes to child for RabbitMQ at the moment
     if pid_child == 0:
         print("CHILD SLEEP: %d %d" % (os.getpid(),sleep_time))
         time.sleep(sleep_time)
