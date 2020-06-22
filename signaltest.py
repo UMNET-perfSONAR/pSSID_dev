@@ -55,7 +55,10 @@ while 1:
         list_child()
         
         # RMQ step 1: add RMqueue cheching to this call (signal? function?, etc.)
+        # YYY can RMQ use a blocking connection with a timeout and catch SIGCHLD?
         time.sleep(5)
+        # set up connection variables like timeout
+        # connection = pika.BlockingConnection()
 
         # we are here if one of three things are true
         # 1. we need to receive a RabbitMQ message
