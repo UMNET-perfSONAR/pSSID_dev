@@ -322,3 +322,25 @@ BSSID_qualify( BSSID_COMPLETE_LIST, SSID_name, min_signal ) {
  
   - print out a message to the screen every 5 seconds ("5 second interval")
   - print out any rabbitMQ mesages that come in as soon as it gets them
+  
+  
+################################################################################
+# schedule / DB integration
+################################################################################
+
+# onstartup:
+#   - read from DB to see if there are tasks outstanding
+#   - add outstanding tasks to queue if appropriate
+
+schedule_task() {
+    # 1. figure out next time we have to run the task
+    #   - next cron interval relative to realtime
+    #   - put that task in to a non-volitile DB
+    #   - put the task in the queue in memory
+}
+
+# in the main loop - time to run a task
+#   - pop task off queue
+#   - run task
+#   - pop it off DB
+#   - reschedule
