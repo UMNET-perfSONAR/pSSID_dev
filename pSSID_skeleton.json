@@ -24,7 +24,7 @@
 	"MWireless_wlan0_channels": [ 1, 2, 3, 4, 5, 10 ]
     }
     
-    "SSIDs": {
+    "SSIDs" : {
 	"MWireless_wlan0": {
 	    "SSID_name": "MWireless",
 	    "BSSID_Channels": "MWireless_wlan0_channels",
