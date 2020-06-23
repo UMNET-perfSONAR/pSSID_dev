@@ -113,7 +113,8 @@
 	"primary_BSSIDs": {
 	    "interface": "primary_network_interface",
 	    "schedule": [ "schedule_every_5_min" ],
-	    "profiles": "all_profiles"
+	    "profiles": "all_profiles",
+	    "priority": 1
 	}
     },
 
@@ -121,7 +122,7 @@
         "example_task_rtt": {
             "profiles": "MWireless_profile",
 	    "BSSIDs": "primary_BSSIDs",
-            "priority": 2,
+            "priority": 3,
             "test": "example_test_rtt",
             "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
@@ -133,7 +134,7 @@
         "example_task_throughput": {
             "profiles": [ "MWireless_profile", "EduRoam_profile" ],
 	    "BSSIDs": "primary_BSSIDs",
-            "priority": 1,
+            "priority": 2,
             "test": "example_test_throughput",
             "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
