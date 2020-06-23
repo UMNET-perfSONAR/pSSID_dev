@@ -132,7 +132,7 @@
         },
 
         "example_task_throughput": {
-            "profiles": [ "MWireless_profile", "EduRoam_profile" ],
+            "profiles": "all_profiles",
 	    "BSSIDs": "primary_BSSIDs",
             "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
