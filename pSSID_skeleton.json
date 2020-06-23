@@ -100,7 +100,7 @@
 	},
     },
 
-    "SSID_profile_groups": {
+    "SSID_groups": {
 	"all_profiles": ["EduRoam_profile", "MWireless_profile"]
     },
 
