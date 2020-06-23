@@ -72,12 +72,12 @@
 
     "SSID_profiles" : {
 	"MWireless_profile": {
-	    "SSID_name": "MWireless",
-	    "BSSID_channels": "MWireless_channles",
-	    "BSSID_mismatch_warning": true,
-	    "BSSID_mismatch_connect": false,
-            "BSSID_min_signal": -55,
-	    "BSSID_min_qualifying": 1,
+	    "name": "MWireless",
+	    "channels": "MWireless_channles",
+	    "mismatch_warning": true,
+	    "mismatch_connect": false,
+            "min_signal": -55,
+	    "min_qualifying": 1,
 	    "AuthMethod": {
 		"type": "User",
 		"UID": "fakeUID",
@@ -86,12 +86,12 @@
 	},
 
 	"EduRoam_profile": {
-	    "SSID_name": "EduRoam",
-	    "BSSID_channels": "EduRoam_channels",
-	    "BSSID_mismatch_warning": true,
-	    "BSSID_mismatch_connect": false,
-            "BSSID_min_signal": -55,
-	    "BSID_min_qualifying": 0,
+	    "name": "EduRoam",
+	    "channels": "EduRoam_channels",
+	    "mismatch_warning": true,
+	    "mismatch_connect": false,
+            "min_signal": -55,
+	    "min_qualifying": 0,
 	    "AuthMethod": {
 		"type": "User",
 		"UID": "fakeUID",
