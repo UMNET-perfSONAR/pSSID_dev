@@ -22,7 +22,7 @@
     "Channel_list": {
 	"EduRoam_wlan0_channels": [ 11, 12, 13, 14, 15 ],
 	"MWireless_wlan0_channels": [ 1, 2, 3, 4, 5, 10 ]
-    }
+    },
     
     "SSIDs" : {
 	"MWireless_wlan0": {
