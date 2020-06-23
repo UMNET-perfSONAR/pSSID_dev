@@ -74,8 +74,8 @@
 	"MWireless_profile": {
 	    "SSID": "MWireless",
 	    "channels": "MWireless_channles",
-	    "mismatch_warning": true,
-	    "mismatch_connect": false,
+	    "channel_mismatch_warning": true,
+	    "channel_mismatch_connect": false,
             "min_signal": -55,
 	    "min_qualifying": 1,
 	    "AuthMethod": {
@@ -88,8 +88,8 @@
 	"EduRoam_profile": {
 	    "SSID": "EduRoam",
 	    "channels": "EduRoam_channels",
-	    "mismatch_warning": true,
-	    "mismatch_connect": false,
+	    "channel_mismatch_warning": true,
+	    "channel_mismatch_connect": false,
             "min_signal": -55,
 	    "min_qualifying": 0,
 	    "AuthMethod": {
