@@ -116,49 +116,123 @@ if args.debug:
         exit(0)
 
 
-while True:
-    print
+# loop forever () {
+def loop_forever():
+    global child_exited
+    pid_child = 0
+    scan_expire = 0
+    signal_cutoff = -75
+    scan_interval = 300
+    task_ttl = 30
+    interface = "wlan0"
+    computed_TTL = 0
+
+    ssid_table = ssid_scan.get_all_bssids('wlan0')
+    scan_expire = time.time() + scan_interval
+
     next_task = schedule.get_queue[0] 
-    schedule.pop(next_task) 
+    schedule.pop(next_task)
+    pSSID_spec, task_name, task_ssid, task_cron = retrieve(next_task)
+
     print("Next Task: ")
-
-    
-    pSSID_spec = next_task.argument[0]
-    task_name = next_task.argument[1]
-    task_ssid = next_task.argument[2]
-    task_cron = next_task.argument[3]
-
     print_task = time.ctime(next_task.time) + \
-        " SSID: " + next_task.argument[2]["name"] + \
-        " Test: " + next_task.argument[1]
-
+        " SSID: " + task_ssid["name"] + \
+        " Test: " + task_name
     print (print_task)
 
-    now = time.time()
-    sleep_time = next_task.time - now if next_task.time > now else 0
-    print("Waiting: ", sleep_time)
-    time.sleep(sleep_time)
-    print("Result URL: ")
-    
+    while True:        
 
-    pSched_task = pSSID_spec["TASK"]
+        if pid_child != 0:
+            signal.signal(signal.SIGCHLD, sigh)
 
-   
+            time.sleep(computed_TTL) #will wait after ttl established
 
-
-    #this will run one test for particular SSID
-    myapi.main(pSched_task)
-    ##this does not return anything but can be modified
-    ##myapi syslogs the result url
+        elif next_task.time > time.time():
+            #next task - current time = sleep until SSID test time
+            sleep_time = next_task.time - time.time() 
+            print("Waiting: ", sleep_time)
+            time.sleep(sleep_time) 
 
 
-    schedule.reschedule(pSSID_spec, task_ssid, task_cron)
-    print("NEW QUEUE:")
-    schedule.print_queue()
+
+        # if(rabbitmq):
+        #     message = ...
+        #     #
+        #     #
+        #     continue
+
+        if(pid_child != 0):            
+            if not child_exited:
+                print ("***kill child***", pid_child)
+                os.kill(pid_child, signal.SIGKILL)          
+                try:
+                    os.wait()
+                except:
+                    print("CHILD DEAD")
+            else:
+                child_exited = False
+                # requeue SSID with schedule.py
+
+            pid_child = 0
+            schedule.reschedule(pSSID_spec, task_ssid, task_cron)
+            print("NEW QUEUE:")
+            schedule.print_queue()
+
+            next_task = schedule.get_queue[0] 
+            schedule.pop(next_task)
+            pSSID_spec, task_name, task_ssid, task_cron = retrieve(next_task)
+
+            if schedule.empty():
+                print("ERROR: this should never reach")
+
+            continue
 
 
-    if schedule.empty():
-        print("ERROR: this should never reach")
+        # Check if table is expired
+        if scan_expire < time.time():
+            # Rescan for bssids
+            ssid_table = ssid_scan.get_all_bssids('wlan0')
+            scan_expire = time.time() + scan_interval
+
+
+        num_bssids = BSSID_qualify(ssid_table, task_ssid) 
+
+        # Compute task time to live
+        if num_bssids:
+            computed_TTL = num_bssids * task_ttl
+        else:
+            continue
+
+
+
+        pid_child = os.fork()
+
+        if pid_child == 0:
+            print("CHILD")
+
+            for bssid in ssid_table:
+                print("BSSID switch")
+                if single_BSSID_qualify(bssid, task_ssid):
+                    bssid = json.loads(bssid)
+                    # Connect to bssid
+                    connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], \
+                            interface)
+
+                    pSSID_spec["TASK"]["archives"] = transform(pSSID_spec,task_name, bssid)
+                    pSched_task = pSSID_spec["TASK"]
+
+                    rest_api.main(pSched_task)
+
+
+            exit(0)
+        
+
+        
+
+
+
+with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr):
+    loop_forever()
 
 
 
