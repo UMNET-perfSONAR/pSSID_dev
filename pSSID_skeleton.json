@@ -14,60 +14,6 @@
         }
     },
 
-    "Channel_list": {
-	"EduRoam_wlan0_channels": [ 11, 12, 13, 14, 15 ],
-	"MWireless_wlan0_channels": [ 1, 2, 3, 4, 5, 10 ]
-    },
-    
-    "SSIDs" : {
-	"MWireless_wlan0": {
-	    "SSID_name": "MWireless",
-	    "BSSID_Channels": "MWireless_wlan0_channels",
-	    "BSSID_Channel_mismatch_warning": true,
-	    "BSSID_Channel_mismatch_connect": false,
-            "BSSID_min_signal": -55,
-	    "BSID_min_qualifying": 1,
-	    "AuthMethod": {
-		"type": "User",
-		"UID": "fakeUID",
-		"Password": "fakepassword"
-	    }
-	},
-	"EduRoam_wlan0": {
-	    "SSID_name": "EduRoam",
-	    "BSSID_Channels": "EduRoam_wlan0_channels",
-	    "BSSID_Channel_mismatch_warning": true,
-	    "BSSID_Channel_mismatch_connect": false,
-            "BSSID_min_signal": -55,
-	    "BSID_min_qualifying": 0,
-	    "AuthMethod": {
-		"type": "User",
-		"UID": "fakeUID",
-		"Password": "fakepassword"
-	    }
-	}
-    },
-    
-    "SSID_lists": {
-	"wlan0_SSID_list": {
-	    "SSIDs": [ "MWireless_wlan0", "EduRoam_wlan0" ]
-	}
-    },
-
-    "network_interfaces": {
-	"primary_interface": "wlan0",
-	"future_interface": "wlan1"
-    },
-
-    "SSID_scan": {
-	"wlan0_scan": {
-	    "scan_network_interface": "primary_interface",
-	    "SSID_list": "wlan0_SSID_list",
-	    "SSID_warn_if_unknown": true,
-	    "schedule": [ "schedule_every_5_min" ]
-	}
-    },
-
     "tests": {
         "example_test_rtt": {
             "type": "rtt",
@@ -97,7 +43,7 @@
             }
         }
     },
-    
+
     "schedules": {
         "schedule_every_4_hours": {
             "repeat": "0 */4 * * *"
@@ -119,26 +65,78 @@
         }
     },
 
+    "BSSID_channels": {
+	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
+	"MWireless_channels": [ 1, 2, 3, 4, 5, 10 ]
+    },
+
+    "SSID_profiles" : {
+	"MWireless_profile": {
+	    "SSID_name": "MWireless",
+	    "BSSID_channels": "MWireless_channles",
+	    "BSSID_mismatch_warning": true,
+	    "BSSID_mismatch_connect": false,
+            "BSSID_min_signal": -55,
+	    "BSSID_min_qualifying": 1,
+	    "AuthMethod": {
+		"type": "User",
+		"UID": "fakeUID",
+		"Password": "fakepassword"
+	    }
+	},
+
+	"EduRoam_profile": {
+	    "SSID_name": "EduRoam",
+	    "BSSID_channels": "EduRoam_channels",
+	    "BSSID_mismatch_warning": true,
+	    "BSSID_mismatch_connect": false,
+            "BSSID_min_signal": -55,
+	    "BSID_min_qualifying": 0,
+	    "AuthMethod": {
+		"type": "User",
+		"UID": "fakeUID",
+		"Password": "fakepassword"
+	    }
+	},
+    },
+
+    "SSID_profile_groups": {
+	"all_profiles": ["EduRoam_profile", "MWireless_profile"]
+    },
+
+    "network_interfaces": {
+	"primary_network_interface": "wlan0",
+	"future_network_interface": "wlan1"
+    },
+
+    "BSSID_scans" : {
+	"primary_BSSIDs": {
+	    "interface": "primary_network_interface",
+	    "schedule": [ "schedule_every_5_min" ],
+	    "profiles": "all_profiles"
+	}
+    }
+
     "tasks": {
         "example_task_rtt": {
-	    "task_SSID_scan": "wlan0_scan",
-            "task_SSIDs": [ "MWireless", "EduRoam" ],
-            "task_priority": 2,
-            "task_test_spec": "example_test_rtt",
-            "task_archives": [ "example_rabbitmq_archive" ],
-            "task_schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
+            "SSIDs": "MWireless_profile",
+	    "BSSIDs": "primary_BSSIDs",
+            "priority": 2,
+            "test": "example_test_rtt",
+            "archives": [ "example_rabbitmq_archive" ],
+            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
         },
 
         "example_task_throughput": {
-	    "task_SSID_scan": "wlan0_scan",
-            "task_SSIDs": [ "MWireless", "EduRoam" ],
-            "task_priority": 1,
-            "task_test_spec": "example_test_throughput",
-            "task_archives": [ "example_rabbitmq_archive" ],
-            "task_schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
+            "SSIDs": [ "MWireless_profile", "EduRoam_profile" ],
+	    "BSSIDs": "primary_BSSIDs",
+            "priority": 1,
+            "test_spec": "example_test_throughput",
+            "archives": [ "example_rabbitmq_archive" ],
+            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
