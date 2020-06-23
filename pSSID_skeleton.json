@@ -122,10 +122,10 @@
         "example_task_rtt": {
             "profiles": "MWireless_profile",
 	    "BSSIDs": "primary_BSSIDs",
-            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
-            "priority": 3,
             "test": "example_test_rtt",
             "archives": [ "example_rabbitmq_archive" ],
+            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
+            "priority": 3,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
@@ -134,10 +134,10 @@
         "example_task_throughput": {
             "profiles": "all_profiles",
 	    "BSSIDs": "primary_BSSIDs",
-            "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
-            "priority": 2,
             "test": "example_test_throughput",
             "archives": [ "example_rabbitmq_archive" ],
+            "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
+            "priority": 2,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
