@@ -2,7 +2,7 @@
     "_meta":{
         "display-name": "Example Measurements"
     },
-    
+
     "archives": {
         "example_rabbitmq_archive": {
             "archiver": "rabbitmq",
@@ -13,16 +13,29 @@
             }
         }
     },
-    
+
+    "SSID_scan": {
+	"schedule": [ "schedule_every_5_min" ],
+	"report_unknown_SSID": true
+    },
+
     "addresses": {
         "FILL_IN_ADDRESS_NAME_1": { "address": "FILL_IN_HOSTNAME_OR_IP_1" },
         "FILL_IN_ADDRESS_NAME_2": { "address": "FILL_IN_HOSTNAME_OR_IP_2" }
     },
+
+    "Channel_list": {
+	"MWireless_channels": [ 1, 2, 3, 4, 5, 10 ]
+    }
     
     "SSID_list": {
         "MWireless": {
             "name": "MWireless",
             "min_signal": "55",
+	    "BSSID_Channels": "MWireless_channels",
+	    "Warn_on_BSSID_Channel_mismatch": true,
+	    "Connect_on_BSSID_mismatch": false,
+	    "Min_qualifying_BSSID": 1,
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
