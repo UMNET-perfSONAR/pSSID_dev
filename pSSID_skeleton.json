@@ -136,7 +136,7 @@
             "priority": 1,
             "test": "example_test_throughput",
             "archives": [ "example_rabbitmq_archive" ],
-            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
+            "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
