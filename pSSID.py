@@ -13,17 +13,27 @@ def single_BSSID_qualify(bssid, ssid):
     Take in a json object representing a bssid
     Return True if criteria is met
     """
+    ret = True
     bssid = json.loads(bssid)
 
     # Disqualify based on ssid
     if bssid['ssid'] != ssid['name']:
-        return False
+        ret = False
+    #   if jimmy wants us to report "rougue" SSIDs
+    #       send rougue warning
 
     # Disqualify based on signal strength
     if bssid['signal'] < ssid['min_signal']:
-        return False
+        ret = False
+    
+    # Disqualify based on channel
+    # if bssid['channel'] isn't in the SSID channel list
+    #    if ( we're supposed to warn about channel mismatches )
+    #        warn about the channel mismatch
+    #    if ( we're supposed to not connect to mismatched channels )
+    #        ret = False
 
-    return True
+    return ret
 
 
 
