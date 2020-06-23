@@ -129,6 +129,9 @@ def loop_forever():
 
     ssid_table = ssid_scan.get_all_bssids('wlan0')
     scan_expire = time.time() + scan_interval
+    # foreach defined SSID
+    #     if ( we have too few BSSIDs that qualify )
+    #         warning
 
     next_task = schedule.get_queue[0] 
     schedule.pop(next_task)
