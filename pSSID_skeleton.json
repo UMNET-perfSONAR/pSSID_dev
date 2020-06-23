@@ -54,9 +54,14 @@
 	}
     },
 
+    "network_interfaces": {
+	"primary_interface": "wlan0",
+	"future_interface": "wlan1"
+    },
+
     "SSID_scan": {
 	"wlan0_scan": {
-	    "network_interface": "wlan0",
+	    "scan_network_interface": "primary_interface",
 	    "SSID_list": "wlan0_SSID_list",
 	    "SSID_warn_if_unknown": true,
 	    "schedule": [ "schedule_every_5_min" ]
