@@ -72,7 +72,7 @@
 
     "SSID_profiles" : {
 	"MWireless_profile": {
-	    "name": "MWireless",
+	    "SSID": "MWireless",
 	    "channels": "MWireless_channles",
 	    "mismatch_warning": true,
 	    "mismatch_connect": false,
@@ -86,7 +86,7 @@
 	},
 
 	"EduRoam_profile": {
-	    "name": "EduRoam",
+	    "SSID": "EduRoam",
 	    "channels": "EduRoam_channels",
 	    "mismatch_warning": true,
 	    "mismatch_connect": false,
