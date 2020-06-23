@@ -14,11 +14,6 @@
         }
     },
 
-    "addresses": {
-        "FILL_IN_ADDRESS_NAME_1": { "address": "FILL_IN_HOSTNAME_OR_IP_1" },
-        "FILL_IN_ADDRESS_NAME_2": { "address": "FILL_IN_HOSTNAME_OR_IP_2" }
-    },
-
     "Channel_list": {
 	"EduRoam_wlan0_channels": [ 11, 12, 13, 14, 15 ],
 	"MWireless_wlan0_channels": [ 1, 2, 3, 4, 5, 10 ]
@@ -68,26 +63,6 @@
 	}
     },
 
-    "groups": {
-        "example_group_mesh": {
-            "type": "mesh",
-            "addresses": [
-                { "name": "FILL_IN_ADDRESS_NAME_1" },
-                { "name": "FILL_IN_ADDRESS_NAME_2" }
-            ]
-        },
-        
-        "example_group_disjoint": {
-            "type": "disjoint",
-            "a-addresses": [
-                { "name": "FILL_IN_ADDRESS_NAME_1" }
-            ],
-            "b-addresses": [
-                { "name": "FILL_IN_ADDRESS_NAME_2" }
-            ]
-        }
-    },
-    
     "tests": {
         "example_test_rtt": {
             "type": "rtt",
