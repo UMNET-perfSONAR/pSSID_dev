@@ -115,7 +115,7 @@
 	    "schedule": [ "schedule_every_5_min" ],
 	    "profiles": "all_profiles"
 	}
-    }
+    },
 
     "tasks": {
         "example_task_rtt": {
