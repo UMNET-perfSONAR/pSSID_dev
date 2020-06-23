@@ -119,7 +119,7 @@
 
     "tasks": {
         "example_task_rtt": {
-            "SSIDs": "MWireless_profile",
+            "profiles": "MWireless_profile",
 	    "BSSIDs": "primary_BSSIDs",
             "priority": 2,
             "test": "example_test_rtt",
@@ -131,10 +131,10 @@
         },
 
         "example_task_throughput": {
-            "SSIDs": [ "MWireless_profile", "EduRoam_profile" ],
+            "profiles": [ "MWireless_profile", "EduRoam_profile" ],
 	    "BSSIDs": "primary_BSSIDs",
             "priority": 1,
-            "test_spec": "example_test_throughput",
+            "test": "example_test_throughput",
             "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
             "_meta": {
