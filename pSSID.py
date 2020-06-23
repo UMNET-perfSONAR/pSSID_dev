@@ -8,6 +8,49 @@ import datetime
 from dateutil.tz import tzlocal
 import myapi
 
+def single_BSSID_qualify(bssid, ssid):
+    """
+    Take in a json object representing a bssid
+    Return True if criteria is met
+    """
+    bssid = json.loads(bssid)
+
+    # Disqualify based on ssid
+    if bssid['ssid'] != ssid['name']:
+        return False
+
+    # Disqualify based on signal strength
+    if bssid['signal'] < ssid['min_signal']:
+        return False
+
+    return True
+
+
+
+def BSSID_qualify(bssid_list, ssid):
+    """
+    Take in a list of all bssids
+    Returns the number of valid bssids according to the input values
+    """
+    qualified_bssids = 0
+
+    for bssid in bssid_list:
+        if single_BSSID_qualify(bssid, ssid):
+            qualified_bssids += 1
+
+    return qualified_bssids
+
+
+# def run_task(bssid_list, ssid, min_signal, interface):
+#     """
+#     Run a task given a list of possible bssids
+#     """
+#     for bssid in bssid_list:
+#         if single_BSSID_qualify(bssid, ssid, min_signal):
+#             bssid = json.loads(bssid)
+#             # Connect to bssid
+#             connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], \
+#                     interface)
 
 
 def debug(parsed_file, schedule):    
