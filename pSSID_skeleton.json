@@ -113,6 +113,7 @@
 	"primary_BSSIDs": {
 	    "interface": "primary_network_interface",
 	    "profiles": "all_profiles",
+	    "unknown_SSID_warning": true,
 	    "schedule": [ "schedule_every_5_min" ],
 	    "priority": 1
 	}
