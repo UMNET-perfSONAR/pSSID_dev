@@ -45,7 +45,6 @@ channel=connection.channel()
 channel.exchange_declare(exchange='logs', exchange_type='direct')
 result=channel.queue_declare(queue='',exclusive=True)
 channel.queue_bind(exchange='logs', queue=result.method.queue, routing_key='pi-point')
-
 child_exited = False
 while 1:
     sleep_time = random.randint(3,6 )
@@ -59,15 +58,20 @@ while 1:
         print("")
         print("PARENT CHILD: %d %d"% (os.getpid(), pid_child))
         list_child()
-
         # RMQ step 1: add RMqueue cheching to this call (signal? function?, etc.)
         # YYY can RMQ use a blocking connection with a timeout and catch SIGCHLD?
         #time.sleep(5)
-        for method, properties, body in channel.consume('', inactivity_timeout =4.5):
-                print("consume over")
-                if(body)!=None:
-                        print(body)
-                break
+        #for method, properties, body in channel.consume('', inactivity_timeout =4.5):
+        #        print("consume over")
+        #        if(body)!=None:
+        #                print(body)
+        #        break
+        for msg in channel.consume('', inactivity_timeout = 4.5):
+            if msg!=None:
+                method, properties, body = msg
+                print body
+            break
+
         # set up connection variables like timeout
         # connection = pika.BlockingConnection()
 
