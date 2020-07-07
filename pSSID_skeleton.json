@@ -18,7 +18,7 @@
         "example_test_rtt": {
             "type": "rtt",
             "spec": {
-                "dest": "testpoint2"
+                "dest": "www.umich.edu"
             }
         },
         "example_test_latencybg": {
@@ -48,10 +48,10 @@
         "schedule_every_4_hours": {
             "repeat": "0 */4 * * *"
         },
-        "schedule_every_minute": {
+        "schedule_every_1_min": {
             "repeat": "*/1 * * * *"
         },   
-        "schedule_every_hour": {
+        "schedule_every_1_hour": {
             "repeat": "0 * * * *"
         },   
         "schedule_Tuesday_10AM": {
@@ -60,8 +60,11 @@
         "schedule_Tuesday_10:10AM": {
             "repeat": "10 10 * * 2"
         },   
-        "schedule_10_minutes": {
+        "schedule_every_10_min": {
             "repeat": "*/10 * * * *"
+        },
+        "schedule_every_5_min": {
+            "repeat": "*/5 * * * *"
         }
     },
 
@@ -86,7 +89,7 @@
 	},
 
 	"EduRoam_profile": {
-	    "SSID": "EduRoam",
+	    "SSID": "eduroam",
 	    "channels": "EduRoam_channels",
 	    "channel_mismatch_warning": true,
 	    "channel_mismatch_connect": false,
@@ -121,11 +124,11 @@
 
     "tasks": {
         "example_task_rtt": {
-            "profiles": "MWireless_profile",
+            "profiles": ["MWireless_profile"],
 	    "BSSIDs": "primary_BSSIDs",
             "test": "example_test_rtt",
             "archives": [ "example_rabbitmq_archive" ],
-            "schedule": [ "schedule_every_hour", "schedule_Tuesday_10:10AM" ],
+            "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
             "priority": 3,
             "_meta": {
                 "display-name": "Example RTT Tests"
@@ -137,7 +140,7 @@
 	    "BSSIDs": "primary_BSSIDs",
             "test": "example_test_throughput",
             "archives": [ "example_rabbitmq_archive" ],
-            "schedule": [ "schedule_four_hours", "schedule_Tuesday_10:10AM" ],
+            "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
             "_meta": {
                 "display-name": "Example RTT Tests"
