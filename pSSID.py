@@ -5,7 +5,6 @@ import daemon
 import sys
 import time
 import datetime
-from dateutil.tz import tzlocal
 import rest_api
 import psjson
 import os
@@ -14,6 +13,7 @@ import ssid_scan
 import connect_bssid
 import json
 import warnings
+import pika
 
 
 
@@ -30,7 +30,9 @@ def sigh(signum, frame):
         child_exited = True
 
 
-def print_bssid(bssid):
+def print_bssid(diagnostic, bssid):
+    print
+    print(diagnostic)
     print(bssid)
 
 def single_BSSID_qualify(bssid, ssid = {}, ssid_list=[], unknown_SSID_warn = True, scan = False, rogue_list =[]):
@@ -58,9 +60,8 @@ def single_BSSID_qualify(bssid, ssid = {}, ssid_list=[], unknown_SSID_warn = Tru
             if bssid['ssid'] not in rogue_list:
                 rogue_list.append(bssid['ssid'])
                 if unknown_SSID_warn:
-                    print
-                    print("Rogue SSID: " + bssid['ssid'])
-                    print(bssid)
+                    diagn = "Rogue SSID: " + bssid['ssid']
+                    #print(diagn, bssid)
                 rogue_ssid = True
 
     elif bssid["ssid"] != ssid["SSID"]:
@@ -72,9 +73,8 @@ def single_BSSID_qualify(bssid, ssid = {}, ssid_list=[], unknown_SSID_warn = Tru
     # Disqualify based on channel
     if not rogue_ssid and bssid["channel"] not in ssid["channels"]: 
         if ssid["channel_mismatch_warning"]:
-            print
-            print("channel mismatch: for SSID " + ssid["SSID"] + " " + str(ssid["channels"]))
-            print(bssid)
+            diagn = "channel mismatch: for SSID " + ssid["SSID"] + " " + str(ssid["channels"])
+            #print(diagn, bssid)
         if not ssid["channel_mismatch_connect"]:
             ret = False
 
@@ -111,7 +111,8 @@ def BSSID_qualify(bssid_list, ssid = {}, ssid_list=[],  unknown_SSID_warn = True
         ret, ssid  = single_BSSID_qualify(bssid, ssid, ssid_list, unknown_SSID_warn, scan, rogue_list)
         if ret:            
             qualified_bssids += 1
-            qualified_per_ssid[ssid["SSID"]] += 1
+            if scan:
+                qualified_per_ssid[ssid["SSID"]] += 1
 
     if scan:
         for j in ssid_list:
@@ -123,7 +124,7 @@ def BSSID_qualify(bssid_list, ssid = {}, ssid_list=[],  unknown_SSID_warn = True
 
 
 
-def transform(main_obj bssid):
+def transform(main_obj, bssid):
     transform = {}
     transform["time"] = time.ctime(time.time())
     transform["SSID"] = bssid["ssid"]
@@ -144,7 +145,7 @@ def transform(main_obj bssid):
     append = "\"\\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
 
     #list
-    archives_list = pSSID_spec["TASK"]["archives"]
+    archives_list = main_obj["TASK"]["archives"]
     new_list = []
     for i in archives_list:
         i["transform"] = {}
@@ -219,10 +220,17 @@ if args.debug:
 
 # loop forever () {
 def loop_forever():
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel=connection.channel()
+    channel.exchange_declare(exchange='logs', exchange_type='direct')
+    result=channel.queue_declare(queue='',exclusive=True)
+    channel.queue_bind(exchange='logs', queue=result.method.queue, routing_key='pi-point')
+    
     global child_exited
     pid_child = 0
     task_ttl = 30
-    computed_TTL = 0
+    computed_TTL = 10
 
     #interface would depend
     interface = {}
@@ -249,7 +257,7 @@ def loop_forever():
             
             ssid_list = main_obj["profiles"]
 
-            scanned_table = ssid_scan.get_all_bssids(interface)
+            scanned_table = ssid_scan.get_all_bssids(main_obj["interface"])
 
             #print("ssid_list", ssid_list)
 
@@ -274,12 +282,26 @@ def loop_forever():
 
         if pid_child != 0:
             signal.signal(signal.SIGCHLD, sigh)
-            time.sleep(computed_TTL) #will wait after ttl established
+
+            for msg in channel.consume('', inactivity_timeout = computed_TTL):
+            if msg!=None:
+                method, properties, body = msg
+                print body
+            break
+
+            #time.sleep(computed_TTL) #will wait after ttl established
 
         elif next_task.time > time.time():
             sleep_time = next_task.time - time.time() 
             print("Waiting: ", sleep_time)
-            time.sleep(sleep_time) 
+
+            for msg in channel.consume('', inactivity_timeout = sleep_time):
+            if msg!=None:
+                method, properties, body = msg
+                print body
+            break
+
+            #time.sleep(sleep_time) 
 
 
 
