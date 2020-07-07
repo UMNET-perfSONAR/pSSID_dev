@@ -1,16 +1,11 @@
 
-#myapi is Mark's modified REST script
-import myapi
 
+import rest_api
 import datetime
-import dateutil.parser
 import json
-import StringIO
 import time
 import traceback
 import daemon
-
-from dateutil.tz import tzlocal, tzwinlocal
 import sys
 import sched
 from parse_config import Parse
@@ -27,19 +22,20 @@ count = 0
 
 
 
-def run_schedule(eachtask, name, eachssid, eachcron):
+def run_schedule(obj, cron, ssid, scan):
 	global count
 	count += 1
 	print
 	print("Main reached", count)
 	print ("NOW: %s" % time.ctime(time.time()))
-	print ("TASK: ", str(name))
-	print ("SSID: ", str(eachssid["name"]))
-	print ("Result URL: ")
+	print ("TASK: ", str(obj["name"]))
+	if not scan:
+		print ("SSID: ", str(ssid["name"]))
+		print ("Result URL: ")
+		#reschedule should be sent an offset time
+		#s.reschedule(eachtask, name, eachssid)
+		rest_api.main(obj["TASK"])
 
-	#reschedule should be sent an offset time
-	#s.reschedule(eachtask, name, eachssid)
-	myapi.main(eachtask["TASK"])
 	print
 
 
@@ -57,52 +53,63 @@ class Schedule:
 	#this function should be called right after testing loop is reached
     #reschedule needs an offset
     #reschedule takes care of specific specific ssid for a specific task
-	def reschedule(self,given_task, given_ssid, given_cron, given_time=time.time()):
+	def reschedule(self,given_obj, given_cron, given_ssid = {}, given_time=time.time(), scan = False):
 		set_time = time.time()
 		if given_time > time.time():
 			set_time = given_time
 		
-		name = given_task["Name"]
+		name = given_obj["name"]
 		schedule_time =  set_time  + given_cron.next(set_time)
 
-		self.s.enterabs(schedule_time, 1, run_schedule, argument = (given_task,name,given_ssid,given_cron))
+		self.s.enterabs(schedule_time, given_obj["priority"], run_schedule, argument = (given_obj,given_cron,given_ssid, scan))
 
 
-	def print_event(self, event, prefix=""):
-		print_syslog = prefix + time.ctime(event.time) + \
-			" SSID: " + event.argument[2]["name"] + \
-			" Test: " + event.argument[1]
 
-		print (print_syslog)
-
-		syslog.openlog("SCHEDULE", 0, syslog.LOG_LOCAL3)
-		syslog.syslog(syslog.LOG_DEBUG, print_syslog)
-		syslog.closelog()
-
-
-	def print_queue(self):
-		for i in self.s.queue:
-			self.print_event(event=i)
 
 	#schedules for all tasks at the start
 	#"main" needs to be replaced with loop that tests each SSID
 	#returns schedule queue
 	#if this is called again insted of rschedule, the task that have not run will be scheduled twice for the same time
 	def initial_schedule(self, given_time=time.time()):
-		TASKS = self.p.pSSID_task_list()
+		SCANS = self.p.all_scans	#SCANS is a dict
+		for eachscan in SCANS.values():
+			cron_list = eachscan["schedule"]
+			for eachcron in cron_list:
+				self.s.enterabs(time.time(), eachscan["priority"], run_schedule, argument = (eachscan, eachcron, {}, True))
 
+		
+		TASKS = self.p.pSSID_task_list()
 		for eachtask in TASKS:
-			cron_list = eachtask["Sched"]
+			cron_list = eachtask["schedule"]
 			ssid_list = eachtask["SSIDs"]
-			name = eachtask["Name"]
 
 			for eachssid in ssid_list:
 				for eachcron in cron_list:
-					self.reschedule(eachtask, eachssid, eachcron, given_time)
+					self.reschedule(eachtask, eachcron, eachssid, given_time)
 
 		self.s.queue
     	
 	
+	def print_event(self, event, prefix=""):
+		if not event.argument[3]:
+			print_syslog = prefix + time.ctime(event.time) + \
+				" SSID: " + event.argument[2]["SSID"] + \
+				" Test: " + event.argument[0]["name"]
+		else:
+			print_syslog = prefix + time.ctime(event.time) + \
+				" Test: " + event.argument[0]["name"]
+
+		print (print_syslog)
+
+		syslog.openlog("NEWSCHED", 0, syslog.LOG_LOCAL3)
+		syslog.syslog(syslog.LOG_DEBUG, print_syslog)
+		syslog.closelog()
+
+
+	
+	def print_queue(self):
+		for i in self.s.queue:
+			self.print_event(event=i)
 
 
 	def initial_print(self, given_time=time.time()):
@@ -114,12 +121,13 @@ class Schedule:
 		#the next scheduled run for unique task/ssid comb
 		temp = {}
 		for i in self.s.queue:
-			if i.argument[1] not in temp:
-				temp[i.argument[1]] = []
-				temp[i.argument[1]].append(i.argument[2]["name"])
+			if i.argument[0]["name"] not in temp:
+				temp[i.argument[0]["name"]] = []
+				if not i.argument[3]:
+					temp[i.argument[0]["name"]].append(i.argument[2]["SSID"])
 				self.print_event(i, "First: ")
-			elif i.argument[2]["name"] not in temp[i.argument[1]]:
-				temp[i.argument[1]].append(i.argument[2]["name"])
+			elif not i.argument[3] and i.argument[2]["SSID"] not in temp[i.argument[0]["name"]]:
+				temp[i.argument[0]["name"]].append(i.argument[2]["SSID"])
 				self.print_event(i, "First: ")
 
 	
@@ -127,7 +135,7 @@ class Schedule:
 
 	def duration_print(self, given_time, duration):
 		#both need to be in seconds
-		end_time = time.time() + 3600
+		end_time = given_time + duration
 
 		#create a custom dict where each task has additional
 		#attribut 'prev', previously scheduled time
@@ -147,13 +155,13 @@ class Schedule:
 			min_time = end_time
 			for test in temp2:
 
-				curr_time = test["prev"] + test["i"].argument[3].next(test["prev"])
+				curr_time = test["prev"] + test["i"].argument[1].next(test["prev"])
 				test["prev"] = curr_time
 				min_time = min(min_time, curr_time)
 
 				if curr_time <= end_time:
-					print("FAKESCHED: ", time.ctime(curr_time))
-					self.s.enterabs(curr_time, 1, run_schedule, argument = test["i"].argument)
+					#print("FAKESCHED: ", time.ctime(curr_time))
+					self.s.enterabs(curr_time, test["i"].argument[0]["priority"], run_schedule, argument = test["i"].argument)
 			
 			fake_time = min_time
 
@@ -161,15 +169,17 @@ class Schedule:
 		#print
 		temp = {}
 		for i in self.s.queue:
-			if i.argument[1] not in temp:
-				temp[i.argument[1]] = []
-				temp[i.argument[1]].append(i.argument[2]["name"])
-				self.print_event(i, "First: ")
-			elif i.argument[2]["name"] not in temp[i.argument[1]]:
-				temp[i.argument[1]].append(i.argument[2]["name"])
-				self.print_event(i, "First: ")
-			else:
-				self.print_event(i, "Next: ")
+			if i.time < end_time:
+				if i.argument[0]["name"] not in temp:
+					temp[i.argument[0]["name"]] = []
+					if not i.argument[3]:
+						temp[i.argument[0]["name"]].append(i.argument[2]["SSID"])
+					self.print_event(i, "First: ")
+				elif not i.argument[3] and i.argument[2]["SSID"] not in temp[i.argument[0]["name"]]:
+					temp[i.argument[0]["name"]].append(i.argument[2]["SSID"])
+					self.print_event(i, "First: ")
+				else:
+					self.print_event(i, "Next: ")
 
 	
 	@property
@@ -198,14 +208,19 @@ def time_input_error():
 
 
 def main():
+	#add more options to duration
+	# -hours
+	# -secs
+
+	#start time
 
 	parser = argparse.ArgumentParser(description='output options')
 	parser.add_argument('file', action='store',
 	  help='json file')
 	parser.add_argument('--start', action='store',
-	  help='start time')
+	  help='start time YYYY-MM-DD-HH-MIN')
 	parser.add_argument('--duration', action='store',
-	  help='duration/timelength')
+	  help='duration/timelength in seconds', type=int)
 
 	args = parser.parse_args()
 
