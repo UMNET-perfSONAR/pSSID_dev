@@ -284,10 +284,10 @@ def loop_forever():
             signal.signal(signal.SIGCHLD, sigh)
 
             for msg in channel.consume('', inactivity_timeout = computed_TTL):
-            if msg!=None:
-                method, properties, body = msg
-                print body
-            break
+                if msg!=None:
+                    method, properties, body = msg
+                    print body
+                    break
 
             #time.sleep(computed_TTL) #will wait after ttl established
 
@@ -296,10 +296,10 @@ def loop_forever():
             print("Waiting: ", sleep_time)
 
             for msg in channel.consume('', inactivity_timeout = sleep_time):
-            if msg!=None:
-                method, properties, body = msg
-                print body
-            break
+                if msg!=None:
+                    method, properties, body = msg
+                    print body
+                    break
 
             #time.sleep(sleep_time) 
 
