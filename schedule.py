@@ -6,6 +6,7 @@ import json
 import time
 import traceback
 import daemon
+import os
 import sys
 import sched
 from parse_config import Parse
@@ -291,7 +292,7 @@ def main():
 
 
 if __name__ == '__main__':
-	with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, working_directory='/home/vagrant'):
+	with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, working_directory=os.getcwd()):
 		main()
 
 
