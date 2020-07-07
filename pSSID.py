@@ -31,7 +31,7 @@ def sigh(signum, frame):
 
 
 def print_bssid(diagnostic, bssid):
-    print
+    print(" ")
     print(diagnostic)
     print(bssid)
 
@@ -153,7 +153,7 @@ def transform(main_obj, bssid):
         new_list.append(i)
         #print(i)
 
-    print(script_str)
+    #print(script_str)
 
     return new_list
 
@@ -213,7 +213,7 @@ schedule.initial_schedule()
 
 if args.debug:
     with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, 
-        working_directory='/home/vagrant'):
+        working_directory=os.getcwd()):
         debug(parsed_file, schedule)
         exit(0)
 
@@ -286,7 +286,7 @@ def loop_forever():
             for msg in channel.consume('', inactivity_timeout = computed_TTL):
                 if msg!=None:
                     method, properties, body = msg
-                    print body
+                    print (body)
                     break
 
             #time.sleep(computed_TTL) #will wait after ttl established
@@ -298,19 +298,12 @@ def loop_forever():
             for msg in channel.consume('', inactivity_timeout = sleep_time):
                 if msg!=None:
                     method, properties, body = msg
-                    print body
+                    print (body)
                     break
 
             #time.sleep(sleep_time) 
-
-
-
-        # if(rabbitmq):
-        #     message = ...
-        #     #
-        #     #
-        #     continue
-
+   
+      
         if(pid_child != 0):            
             if not child_exited:
                 print ("***kill child***", pid_child)
