@@ -100,7 +100,7 @@
 		"UID": "fakeUID",
 		"Password": "fakepassword"
 	    }
-	},
+	}
     },
 
     "SSID_groups": {
