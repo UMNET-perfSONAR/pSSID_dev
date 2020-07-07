@@ -3,8 +3,45 @@ import psjson
 import traceback
 from crontab import CronTab
 import sys
+import argparse
 
 
+    #checks for scans defined and creates a dictionary of the scan objects
+def scan_bssids(self):
+    all_scans = {}
+
+    for i in self.BSSID_scans:
+        scan_obj = {}
+        try:
+            scan_profile = self.BSSID_scans[i]
+            scan_obj["name"] = i
+            scan_obj["interface"] = self.network_interfaces[scan_profile["interface"]]
+            scan_obj["profiles"] = self.SSIDs_for_profiles(scan_profile["profiles"])
+
+            scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
+            scan_obj["priority"] = scan_profile["priority"]
+        except:
+            print("ERROR in retrieving \"BSSID_scans\"")
+            print(traceback.print_exc())
+
+    
+
+        try:
+            cron_list = []
+            schedlist = scan_profile["schedule"]
+            for j in schedlist:
+                scansched = self.schedules[j]
+                cron_list.append(CronTab(str(scansched["repeat"])))
+
+            scan_obj["schedule"] = cron_list
+        except:
+            print("ERROR in retrieving \"schedule\" from BSSID_scans")
+            print(traceback.print_exc())
+
+        
+        all_scans[i] = scan_obj
+
+    return all_scans
 
 #Parse:
     #extracts the individual dictionaries 
@@ -15,7 +52,7 @@ import sys
         #(with cron scheduler and SSID list)
     #creates and returns list of all tasks from config file formatted for pSSID
     #takes one argument: json configuration file
-    
+
 class Parse:
 
     def __init__(self, config_file):
@@ -26,9 +63,17 @@ class Parse:
             self.meta = json_obj["_meta"]
             self.archives = json_obj["archives"]
             self.tests = json_obj["tests"]
-            self.tasks = json_obj["tasks"]
             self.schedules = json_obj["schedules"]
-            self.SSID_list = json_obj["SSID_list"]
+            self.BSSID_channels = json_obj["BSSID_channels"]
+            self.SSID_profiles = json_obj["SSID_profiles"]
+            self.SSID_groups = json_obj["SSID_groups"]
+            self.network_interfaces = json_obj["network_interfaces"]
+            self.BSSID_scans = json_obj["BSSID_scans"]
+            self.tasks = json_obj["tasks"]
+
+            self.all_scans = scan_bssids(self)
+
+
         except:
             print("ERROR: Make sure all fields are present")
             print(traceback.print_exc())
@@ -37,7 +82,7 @@ class Parse:
 
     #retuens the dicts in that order, to access individual see example tests below
     def return_all(self):
-        return self.meta, self.archives, self.SSID_list, \
+        return self.meta, self.archives, \
         self.tests, self.schedules, self.tasks
 
 
@@ -59,26 +104,34 @@ class Parse:
 
 
 
-    def SSIDs_for_task(self,given_task):        
+    def SSIDs_for_profiles(self,profiles):        
         try:
-            ssids = []            
-            ssidlist = self.tasks[given_task]["SSIDs"]
+            ssids = [] 
+
+            if type(profiles) is list:
+                ssidlist = profiles 
+            else:
+                ssidlist = self.SSID_groups[profiles]
+
+            #print("ssidlist", ssidlist)
+            
             for i in ssidlist:
-                ssid = self.SSID_list[i]
+                ssid = self.SSID_profiles[i]
+                if type(ssid["channels"]) is not list:
+                    ssid["channels"] = self.BSSID_channels[ssid["channels"] ]
                 ssids.append(ssid)
         except:
-            print("ERROR in retrieving \"SSIDs\" from", given_task)
+            print("ERROR in retrieving \"SSIDs\" from", profiles)
             print(traceback.print_exc())
 
         return ssids
 
-
-
     
+   
     #option to get a pscheduler formatted for specific task
     #running this function validates every key(archives,tests, etc) also valid
     def create_pScheduler_task(self, given_task):
-        #scheudler needs to be empty when sent to pScheduler
+        #scheudle needs to be empty when sent to pScheduler
         taskobj = {
             "schema" : 1,
             "schedule": {}
@@ -109,14 +162,22 @@ class Parse:
     # SSIDs: list of SSIDs associated with task
     def create_pSSID_task(self, given_task):
         taskobj = {}
-        taskobj["Name"] = given_task
+        taskobj["name"] = given_task
         taskobj["TASK"] = self.create_pScheduler_task(given_task)
 
         #Attaching schedule
-        taskobj["Sched"] = self.schedule_for_task(given_task)
+        taskobj["schedule"] = self.schedule_for_task(given_task)
 
         #Attaching SSIDs 
-        taskobj["SSIDs"] = self.SSIDs_for_task(given_task)
+        taskobj["SSIDs"] = self.SSIDs_for_profiles(self.tasks[given_task]["profiles"])
+
+        #interface
+        taskobj["interface"] = self.all_scans[self.tasks[given_task]["BSSIDs"]]
+
+        #TODO: priority
+        taskobj["priority"] = self.tasks[given_task]["priority"]
+
+        taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
 
         return taskobj
 
@@ -130,6 +191,7 @@ class Parse:
 
         return TASKS
 
+    
 
 
 def tests(p):
@@ -138,10 +200,21 @@ def tests(p):
     print("SINGLE")
     print("meta:", p.meta)
     print("archives:", p.archives)
-    print("SSID_list:", p.SSID_list)
     print("tests:", p.tests)
     print("schedules:", p.schedules)
     print("tasks:", p.tasks)
+
+
+    print("BSSID_channels", p.BSSID_channels) 
+    print("SSID_profiles", p.SSID_profiles)
+    print("SSID_groups", p.SSID_groups) 
+    print("newwork_interfaces", p.network_interfaces)
+    print("BSSID_scans", p.BSSID_scans)
+
+    print
+    print("all_scans", p.all_scans)
+
+
     print("SINGLE END")
     print
     print
@@ -171,21 +244,23 @@ def tests(p):
 
     #TODO XXX: more tests
 
+
+
+
+
+
 #sub-main for testing purposes
 #also serves as usage
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2:
-        print "ERROR: Provide JSON file"
-        print "USAGE: python %s filename.json" % sys.argv[0]
-        exit(1)
-    elif len(sys.argv) > 2: 
-        print "ERROR: Only Provide JSON file"
-        print "USAGE: python %s filename.json" % sys.argv[0]
-        exit(1)
+    parser = argparse.ArgumentParser(description='pSSID')
+    parser.add_argument('file', action='store',
+      help='json file')
+    args = parser.parse_args()
 
-    config_file = open(sys.argv[1], "r")
+
+    config_file = open(args.file, "r")
 
     p = Parse(config_file)
     tests(p)    
@@ -194,5 +269,4 @@ if __name__ == "__main__":
     
 
     exit(0)
-
 
