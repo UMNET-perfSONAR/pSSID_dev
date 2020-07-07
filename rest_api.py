@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 """
 This program goes through all of the steps needed to do a single
 run of a pScheduler task through its REST API.
@@ -8,14 +8,15 @@ the standard CentOS repository):
 """
 
 import datetime
-import dateutil.parser
+from dateutil import parser
 import json
 import pycurl
-import StringIO
+from io import StringIO, BytesIO
 import time
-import urllib
+import urllib.parse
 
 from dateutil.tz import tzlocal
+import psjson
 import argparse
 import syslog
 import pika
@@ -69,15 +70,14 @@ LEAD = "localhost"
 
 def fail(message):
     """Complain about a problem and exit."""
-    print message
+    print (message)
     exit(1)
 
 
 def json_load(source):
     """Load a blob of JSON into Python objects"""
-
     try:
-        json_in = json.loads(str(source))
+        json_in = json.loads(str(source.decode("utf-8")))
     except ValueError as ex:
         raise ValueError("Invalid JSON: " + str(ex))
 
@@ -92,139 +92,111 @@ def json_dump(obj):
 
 # -----------------------------------------------------------------------------
 
-# URL Handling functions.  These are lifted directly from the
-# pScheduler library.
+# URL Handling functions.  These are lifted directly from the	
+# pScheduler library.	
+class URLException(Exception):	
+    pass	
 
 
-class URLException(Exception):
-    pass
+class PycURLRunner(object):	
+    def __init__(self, url, params, bind, timeout, allow_redirects, headers, verify_keys):	
+        """Constructor"""	
+        self.curl = pycurl.Curl()	
+        full_url = url if params is None else "%s?%s" % (url, urllib.parse.urlencode(params))	
+        self.curl.setopt(pycurl.URL, str(full_url))	
+        if bind is not None:	
+            self.curl.setopt(pycurl.INTERFACE, bind)	
+        self.curl.setopt(pycurl.FOLLOWLOCATION, allow_redirects)	
+        if headers is not None:            	
+            self.curl.setopt(pycurl.HTTPHEADER, [	
+                "%s: %s" % (str(key), str(value))	
+                for (key, value) in list(headers.items())	
+            ])	
+        if timeout is not None:	
+            self.curl.setopt(pycurl.TIMEOUT_MS, int(timeout * 1000.0))	
+        self.curl.setopt(pycurl.SSL_VERIFYHOST, verify_keys)	
+        self.curl.setopt(pycurl.SSL_VERIFYPEER, verify_keys)	
+        self.buf = BytesIO()	
+        self.curl.setopt(pycurl.WRITEFUNCTION, self.buf.write)	
+    def __call__(self, json, throw):	
+        """Fetch the URL"""	
+        try:	
+            self.curl.perform()	
+            status = self.curl.getinfo(pycurl.HTTP_CODE)	
+            text = self.buf.getvalue()	
+        except pycurl.error as ex:	
+            (code, message) = ex	
+            status = 400	
+            text = message	
+        finally:	
+            self.curl.close()	
+            self.buf.close()	
+            	
+        #If status is outside the HTTP 2XX success  range	
+        if status < 200 or status > 299:	
+            if throw:	
+                raise URLException(text.strip())	
+            else:	
+                return (status, text)	
+        if json:	
+            return (status, json_load(text))	
+        else:	
+            return (status, text)	
+        
+        
+def url_get( url,          # GET URL	
+             params=None,  # GET parameters	
+             bind=None,    # Bind request to specified address	
+             json=True,    # Interpret result as JSON	
+             throw=True,   # Throw if status isn't 200	
+             timeout=None, # Seconds before giving up	
+             allow_redirects=True, # Allows URL to be redirected	
+             headers=None, # Hash of HTTP headers	
+             verify_keys=False  # Verify SSL keys	
+             ):	
+    """	
+    Fetch a URL using GET with parameters, returning whatever came back.	
+    """	
+    curl = PycURLRunner(url, params, bind, timeout, allow_redirects, headers, verify_keys)	
+    return curl(json, throw)	
 
 
-class PycURLRunner(object):
-
-    def __init__(self, url, params, bind, timeout, allow_redirects, headers, verify_keys):
-        """Constructor"""
-
-        self.curl = pycurl.Curl()
-
-        full_url = url if params is None else "%s?%s" % (url, urllib.urlencode(params))
-        self.curl.setopt(pycurl.URL, str(full_url))
-
-        if bind is not None:
-            self.curl.setopt(pycurl.INTERFACE, bind)
-
-        self.curl.setopt(pycurl.FOLLOWLOCATION, allow_redirects)
-
-        if headers is not None:            
-            self.curl.setopt(pycurl.HTTPHEADER, [
-                "%s: %s" % (str(key), str(value))
-                for (key, value) in headers.items()
-            ])
-
-        if timeout is not None:
-            self.curl.setopt(pycurl.TIMEOUT_MS, int(timeout * 1000.0))
-
-        self.curl.setopt(pycurl.SSL_VERIFYHOST, verify_keys)
-        self.curl.setopt(pycurl.SSL_VERIFYPEER, verify_keys)
-
-        self.buf = StringIO.StringIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, self.buf.write)
+def __content_type_data(content_type, headers, data):	
+    """Figure out the Content-Type based on an incoming type and data and	
+    return that plus data in a type that PycURL can handle."""	
+    assert(content_type is None or isinstance(content_type, str))	
+    assert(isinstance(headers, dict))	
+    if content_type is None or "Content-Type" not in headers:	
+        # Dictionaries are JSON	
+        if isinstance(data, dict):	
+            content_type = "application/json"	
+            data = json_dump(data)	
+        # Anything else is plain text.	
+        else:	
+            content_type = "text/plain"	
+            data = str(data)	
+    return content_type, data	
 
 
-    def __call__(self, json, throw):
-        """Fetch the URL"""
-        try:
-            self.curl.perform()
-            status = self.curl.getinfo(pycurl.HTTP_CODE)
-            text = self.buf.getvalue()
-        except pycurl.error as ex:
-            (code, message) = ex
-            status = 400
-            text = message
-        finally:
-            self.curl.close()
-            self.buf.close()
-            
-        #If status is outside the HTTP 2XX success  range
-        if status < 200 or status > 299:
-            if throw:
-                raise URLException(text.strip())
-            else:
-                return (status, text)
-
-        if json:
-            return (status, json_load(text))
-        else:
-            return (status, text)
-
-
-
-def url_get( url,          # GET URL
-             params=None,  # GET parameters
-             bind=None,    # Bind request to specified address
-             json=True,    # Interpret result as JSON
-             throw=True,   # Throw if status isn't 200
-             timeout=None, # Seconds before giving up
-             allow_redirects=True, # Allows URL to be redirected
-             headers=None, # Hash of HTTP headers
-             verify_keys=False  # Verify SSL keys
-             ):
-    """
-    Fetch a URL using GET with parameters, returning whatever came back.
-    """
-
-    curl = PycURLRunner(url, params, bind, timeout, allow_redirects, headers, verify_keys)
-    return curl(json, throw)
-
-
-
-def __content_type_data(content_type, headers, data):
-
-    """Figure out the Content-Type based on an incoming type and data and
-    return that plus data in a type that PycURL can handle."""
-
-    assert(content_type is None or isinstance(content_type, basestring))
-    assert(isinstance(headers, dict))
-
-    if content_type is None or "Content-Type" not in headers:
-
-        # Dictionaries are JSON
-        if isinstance(data, dict):
-            content_type = "application/json"
-            data = json_dump(data)
-
-        # Anything else is plain text.
-        else:
-            content_type = "text/plain"
-            data = str(data)
-
-    return content_type, data
-
-
-
-
-def url_post( url,          # GET URL
-              params={},    # GET parameters
-              data=None,    # Data to post
-              content_type=None,  # Content type
-              bind=None,    # Bind request to specified address
-              json=True,    # Interpret result as JSON
-              throw=True,   # Throw if status isn't 200
-              timeout=None, # Seconds before giving up
-              allow_redirects=True, #Allows URL to be redirected
-              headers={},   # Hash of HTTP headers
-              verify_keys=False  # Verify SSL keys
-              ):
-    """
-    Post to a URL, returning whatever came back.
-    """
-
-    content_type, data = __content_type_data(content_type, headers, data)
-    headers["Content-Type"] = content_type
-
-    curl = PycURLRunner(url, params, bind, timeout, allow_redirects, headers, verify_keys)
-
-    curl.curl.setopt(pycurl.POSTFIELDS, data)
+def url_post( url,          # GET URL	
+              params={},    # GET parameters	
+              data=None,    # Data to post	
+              content_type=None,  # Content type	
+              bind=None,    # Bind request to specified address	
+              json=True,    # Interpret result as JSON	
+              throw=True,   # Throw if status isn't 200	
+              timeout=None, # Seconds before giving up	
+              allow_redirects=True, #Allows URL to be redirected	
+              headers={},   # Hash of HTTP headers	
+              verify_keys=False  # Verify SSL keys	
+              ):	
+    """	
+    Post to a URL, returning whatever came back.	
+    """	
+    content_type, data = __content_type_data(content_type, headers, data)	
+    headers["Content-Type"] = content_type	
+    curl = PycURLRunner(url, params, bind, timeout, allow_redirects, headers, verify_keys)	
+    curl.curl.setopt(pycurl.POSTFIELDS, data)	
 
     return curl(json, throw)
 
@@ -320,7 +292,7 @@ def main(TASK, o=False, s=False, q=False):
 
     try:
         # The end time comes back as ISO 8601.  Parse it.
-        end_time = dateutil.parser.parse(run_data["end-time"])
+        end_time = parser.parse(run_data["end-time"])
     except ValueError as ex:
         fail("Server did not return a valid end time for the task: %s" % (str(ex)))
 
@@ -384,13 +356,13 @@ def main(TASK, o=False, s=False, q=False):
     # print
     # print result_text
 
-    #if(args.o):
+    if(args.o):
         #stdout print
-    print
-    print
-    print "JSON Result:"
-    print
-    print json_dump(result_data)
+        print
+        print
+        print "JSON Result:"
+        print
+        print json_dump(result_data)
     if(args.s):
         #syslog print
         syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
@@ -423,7 +395,4 @@ if __name__ == '__main__':
       help='rabbitmq')
 
     args = parser.parse_args()
-#args o removed
     main(TASK, args.s, args.q)
-
-
