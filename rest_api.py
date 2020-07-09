@@ -8,7 +8,7 @@ the standard CentOS repository):
 """
 
 import datetime
-from dateutil import parser
+from dateutil import parser as dateparse
 import json
 import pycurl
 from io import StringIO, BytesIO
@@ -292,7 +292,7 @@ def main(TASK, o=False, s=False, q=False):
 
     try:
         # The end time comes back as ISO 8601.  Parse it.
-        end_time = parser.parse(run_data["end-time"])
+        end_time = dateparse.parse(run_data["end-time"])
     except ValueError as ex:
         fail("Server did not return a valid end time for the task: %s" % (str(ex)))
 
