@@ -14,6 +14,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
+
 class ResultCallback(CallbackBase):
     """A sample callback plugin used for performing an action as results come in
 
@@ -31,6 +32,11 @@ class ResultCallback(CallbackBase):
 
 
 def prepare_connection(ssid, bssid, interface):
+    """
+    Prepare a connection to a given ssid and bssid using wpa_supplicant
+    Configure and connect on given interface
+    """
+
     # Format SSID and BSSID for wpa supplicant
     ssid_line = '       ssid="' + ssid + '"'
     bssid_line = '     bssid=' + bssid 
@@ -45,8 +51,7 @@ def prepare_connection(ssid, bssid, interface):
     dhclient = ('dhclient ' + interface)
 
     # since the API is constructed for CLI it expects certain options to always be set in the context object
-    context.CLIARGS = ImmutableDict(connection='local', module_path=['/to/mymodules'], forks=10, become=None,
-                                    become_method=None, become_user=None, check=False, diff=False)
+    context.CLIARGS = ImmutableDict(connection='local', module_path=['/to/mymodules'], forks=10, become=None, become_method=None, become_user=None, check=False, diff=False)
 
     # initialize needed objects
     loader = DataLoader() # Takes care of finding and reading yaml, json and ini files
@@ -67,8 +72,13 @@ def prepare_connection(ssid, bssid, interface):
             hosts = 'localhost',
             gather_facts = 'no',
             tasks = [
+
                 # Remove dhcp leases
-                dict(action=dict(module='file', path='/var/lib/dhcp/', state='absent')),
+                # Appears to be usless, remove soon
+                #dict(action=dict(module='file', path='/var/lib/dhcp/', state='absent')),
+
+                # Remove default route to make dhclient happy
+                dict(action=dict(module='command', args='ip route del default'), ignore_errors='yes'),
 
                 # Remove WiFi interface config
                 dict(action=dict(module='file', path='/var/run/wpa_supplicant/wlan0', state='absent')),
