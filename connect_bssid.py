@@ -14,6 +14,8 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
+DEBUG=False
+
 
 class ResultCallback(CallbackBase):
     """A sample callback plugin used for performing an action as results come in
@@ -28,7 +30,8 @@ class ResultCallback(CallbackBase):
         This method could store the result in an instance attribute for retrieval later
         """
         host = result._host
-        print(json.dumps({host.name: result._result}, indent=4))
+        if DEBUG:
+            print(json.dumps({host.name: result._result}, indent=4))
 
 
 def prepare_connection(ssid, bssid, interface):
@@ -38,8 +41,8 @@ def prepare_connection(ssid, bssid, interface):
     """
 
     # Format SSID and BSSID for wpa supplicant
-    ssid_line = '       ssid="' + ssid + '"'
-    bssid_line = '     bssid=' + bssid 
+    ssid_line = '    ssid="' + ssid + '"'
+    bssid_line = '    bssid=' + bssid 
 
     # Add interface to ip commands
     bring_down = ('ip link set ' + interface + ' down')
@@ -72,10 +75,6 @@ def prepare_connection(ssid, bssid, interface):
             hosts = 'localhost',
             gather_facts = 'no',
             tasks = [
-
-                # Remove dhcp leases
-                # Appears to be usless, remove soon
-                #dict(action=dict(module='file', path='/var/lib/dhcp/', state='absent')),
 
                 # Remove default route to make dhclient happy
                 dict(action=dict(module='command', args='ip route del default'), ignore_errors='yes'),
