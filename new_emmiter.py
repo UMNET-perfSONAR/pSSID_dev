@@ -2,7 +2,7 @@ import pika
 import json
 import sys
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+connection = pika.BlockingConnection(pika.URLParameters("amqp://hi:hi@pi-point:5672"))
 channel = connection.channel()
 channel.exchange_declare(exchange='logs', exchange_type='direct')
 ins = json.load(sys.stdin)
