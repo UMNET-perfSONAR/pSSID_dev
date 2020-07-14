@@ -28,3 +28,4 @@ run new_emmiter program with your json file as an input
 rmq program should output your message
 ##modify emmiter/rmq to the right hosts
 ### turn off firewalld on all machines and add random user to rmq machine 
+### to setup logstash input from the new rabbitmq instance go to /etc/logstash directory modify pipelines/yml and create a config file for the next pipeline
