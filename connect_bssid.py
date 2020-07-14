@@ -4,6 +4,7 @@ Connect to an input SSID on an input BSSID
 
 import json
 import shutil
+import time
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
@@ -14,7 +15,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 
-DEBUG=False
+DEBUG = False
 
 
 class ResultCallback(CallbackBase):
@@ -39,6 +40,7 @@ def prepare_connection(ssid, bssid, interface):
     Prepare a connection to a given ssid and bssid using wpa_supplicant
     Configure and connect on given interface
     """
+    start_time = time.time()
 
     # Format SSID and BSSID for wpa supplicant
     ssid_line = '    ssid="' + ssid + '"'
@@ -104,7 +106,10 @@ def prepare_connection(ssid, bssid, interface):
                 dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args=dhclient))
+                dict(action=dict(module='command', args=dhclient)),
+
+                # Sure up dns resolver
+                dict(action=dict(module='lineinfile', path='/etc/resolv.conf', regexp='^(.*)search(.*)$', insertafter='EOF', line='search adsroot.itcs.umich.edu'))
              ]
         )
 
@@ -129,3 +134,13 @@ def prepare_connection(ssid, bssid, interface):
 
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+    
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    connection_info = {}
+    connection_info['ssid'] = ssid
+    connection_info['bssid'] = bssid
+    connection_info['time'] = elapsed_time
+    json_info = json.dumps(connection_info)
+    print(json_info)
+
