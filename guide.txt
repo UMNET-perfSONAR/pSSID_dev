@@ -1,0 +1,30 @@
+SETUP LAUNCH 
+########################################################
+git clone https://github.com/UMNET-perfSONAR/ansible-playbook-elastic.git
+cd ansible-playbook-elastic
+ansible-galaxy install -r  requirements.yml --ignore-errors
+vagrant up
+## now u should be able to log onto your hosts
+vagrant ssh pi-point
+pscheduler task --archive '{"archiver":"rabbitmq","data":{"_url":"amqp://elastic:elastic@elastic",
+ "routing-key":"pscheduler_raw"}}' rtt --dest elastic
+## You can change the task type and destination all other things should remain the same 
+## this will send a task to the rabbitmq archiver on elastichost and you will able to see the
+# result data in kibana
+##to see your result in kibana go to your browser and type in ip adress of the host u are running
+#your setup on for example 198.111.114.158:5601 or localhost:5601
+##On the first try you will have to setup at least one index that will select data for display. 
+# kibana has a handy feature allowing you to use * to select all available indexes. Ex. pschedu*
+## After u setup the index u should be able to pick out Discovery tab on the left, 
+# set time frame and see results of your tests.
+SETTING UP RABBITMQ PROGRAMS
+##########################################################
+vagrant ssh to the host u want to run your rmq loop with receiver
+wget https://raw.githubusercontent.com/UMNET-perfSONAR/pSSID/master/rmq_loop.py
+wget https://raw.githubusercontent.com/UMNET-perfSONAR/pSSID/master/new_emmiter.py 
+create a json file with the message you want to send 
+run rmq_loop program 
+run new_emmiter program with your json file as an input
+rmq program should output your message
+##modify emmiter/rmq to the right hosts
+### turn off firewalld on all machines and add random user to rmq machine 
