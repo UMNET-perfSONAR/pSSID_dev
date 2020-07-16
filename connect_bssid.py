@@ -2,6 +2,7 @@
 Connect to an input SSID on an input BSSID
 """
 
+import socket
 import json
 import shutil
 import time
@@ -125,8 +126,10 @@ def prepare_connection(ssid, bssid, interface, auth):
                 # Get an IP
                 dict(action=dict(module='command', args=dhclient)),
 
+                dict(action=dict(module='command', args='hostname -I'))
+
                 # Restart resolver
-                dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
+                #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
              ]
         )
 
@@ -158,5 +161,13 @@ def prepare_connection(ssid, bssid, interface, auth):
     connection_info['ssid'] = ssid
     connection_info['bssid'] = bssid
     connection_info['time'] = elapsed_time
+
+    # Hacky script to get ip
+    # To be removed but needed now
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip_addr = s.getsockname()[0]
+    s.close()
+    return ip_addr
     json_info = json.dumps(connection_info)
 
