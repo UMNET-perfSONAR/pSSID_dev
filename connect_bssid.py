@@ -35,12 +35,22 @@ class ResultCallback(CallbackBase):
             print(json.dumps({host.name: result._result}, indent=4))
 
 
-def prepare_connection(ssid, bssid, interface):
+def prepare_connection(ssid, bssid, interface, auth):
     """
     Prepare a connection to a given ssid and bssid using wpa_supplicant
     Configure and connect on given interface
+    Decide connect method and config file based on auth
     """
     start_time = time.time()
+
+    # Determine auth method
+    if auth['type'] == 'MacAddress':
+        print('Connect to MSetup')
+        exit()
+
+    elif auth['type'] == 'User':
+        wpa_supp_path = '/etc/wpa_supplicant/wpa_supplicant_' + ssid + '.conf'
+        print('User auth')
 
     # Format SSID and BSSID for wpa supplicant
     ssid_line = '    ssid="' + ssid + '"'
@@ -78,6 +88,13 @@ def prepare_connection(ssid, bssid, interface):
             gather_facts = 'no',
             tasks = [
 
+                # Check for wpa_supplicant file
+                dict(action=dict(module='start', path=wpa_supp_path), register='wpa_exists'),
+
+                # Exit play if wpa_supplicant is not found
+                dict(action=dict(module='debug', msg='Could not find wpa_supplicant with given ssid'), when='not wpa_exists.stat.exists'),
+                dict(action=dict(module='meta', args='end_play'), when='not wpa_exists.stat.exists'),
+
                 # Remove default route to make dhclient happy
                 dict(action=dict(module='command', args='ip route del default'), ignore_errors='yes'),
 
@@ -97,16 +114,19 @@ def prepare_connection(ssid, bssid, interface):
                 dict(action=dict(module='command', args= bring_up)),
 
                 # Add SSID to wpa_supplicant
-                dict(action=dict(module='lineinfile', path='/etc/wpa_supplicant/wpa_supplicant.conf', regexp='^(.*)ssid=(.*)$', line=ssid_line)),
+                dict(action=dict(module='lineinfile', path=wpa_supp_path, regexp='^(.*)ssid=(.*)$', line=ssid_line)),
 
                 # Add BSSID to wpa_supplicant
-                dict(action=dict(module='lineinfile', path='/etc/wpa_supplicant/wpa_supplicant.conf', regexp='^(.*)bssid=(.*)$', line=bssid_line)),
+                dict(action=dict(module='lineinfile', path=wpa_supp_path, regexp='^(.*)bssid=(.*)$', line=bssid_line)),
 
                 # Connect to WiFi
                 dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args=dhclient))
+                dict(action=dict(module='command', args=dhclient)),
+
+                # Restart resolver
+                dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
              ]
         )
 
