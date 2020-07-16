@@ -89,7 +89,7 @@ def prepare_connection(ssid, bssid, interface, auth):
             tasks = [
 
                 # Check for wpa_supplicant file
-                dict(action=dict(module='start', path=wpa_supp_path), register='wpa_exists'),
+                dict(action=dict(module='stat', path=wpa_supp_path), register='wpa_exists'),
 
                 # Exit play if wpa_supplicant is not found
                 dict(action=dict(module='debug', msg='Could not find wpa_supplicant with given ssid'), when='not wpa_exists.stat.exists'),
