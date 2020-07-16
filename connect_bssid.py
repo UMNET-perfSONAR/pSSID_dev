@@ -106,10 +106,7 @@ def prepare_connection(ssid, bssid, interface):
                 dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args=dhclient)),
-
-                # Sure up dns resolver
-                dict(action=dict(module='lineinfile', path='/etc/resolv.conf', regexp='^(.*)search(.*)$', insertafter='EOF', line='search adsroot.itcs.umich.edu'))
+                dict(action=dict(module='command', args=dhclient))
              ]
         )
 
@@ -142,5 +139,4 @@ def prepare_connection(ssid, bssid, interface):
     connection_info['bssid'] = bssid
     connection_info['time'] = elapsed_time
     json_info = json.dumps(connection_info)
-    print(json_info)
 
