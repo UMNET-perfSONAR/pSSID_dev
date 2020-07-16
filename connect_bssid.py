@@ -62,7 +62,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     bring_up = ('ip link set ' + interface + ' up')
 
     # Add interface to wpa supplicant and dhclient commands
-    run_wpa_supplicant = ('wpa_supplicant -B -c /etc/wpa_supplicant/wpa_supplicant.conf -i ' + interface)
+    run_wpa_supplicant = ('wpa_supplicant -B -c ' + wpa_supp_path + ' -i ' + interface)
     dhclient = ('dhclient ' + interface)
 
     # since the API is constructed for CLI it expects certain options to always be set in the context object
