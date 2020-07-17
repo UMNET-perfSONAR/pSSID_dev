@@ -15,6 +15,15 @@ from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
+import logging
+from logging.handlers import SysLogHandler
+
+# Create logger
+pSSID_logger = logging.getLogger('pSSID_log')
+pSSID_logger.setLevel(logging.DEBUG)
+handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
+pSSID_logger.addHandler(handler)
+
 
 DEBUG = False
 
@@ -36,12 +45,19 @@ class ResultCallback(CallbackBase):
             print(json.dumps({host.name: result._result}, indent=4))
 
 
+
 def prepare_connection(ssid, bssid, interface, auth):
     """
     Prepare a connection to a given ssid and bssid using wpa_supplicant
     Configure and connect on given interface
     Decide connect method and config file based on auth
     """
+    connect_msg = "Connecting to " + ssid + " on " + bssid
+    pSSID_logger.info(connect_msg)
+
+    paranoid = False
+    apache_restart = False
+
     start_time = time.time()
 
     # Determine auth method
@@ -96,6 +112,15 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='debug', msg='Could not find wpa_supplicant with given ssid'), when='not wpa_exists.stat.exists'),
                 dict(action=dict(module='meta', args='end_play'), when='not wpa_exists.stat.exists'),
 
+                # Take down pscheduler services if in paranoid mode
+                dict(action=dict(module='systemd', name='pscheduler-archiver', state='stopped'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-runner', state='stopped'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='stopped'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-ticker', state='stopped'), when=paranoid),
+
+                # Stop apache
+                dict(action=dict(module='systemd', name='apache2', state='stopped'), when=apache_restart),
+
                 # Remove default route to make dhclient happy
                 dict(action=dict(module='command', args='ip route del default'), ignore_errors='yes'),
 
@@ -124,7 +149,17 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args=dhclient))
+                dict(action=dict(module='command', args=dhclient)),
+
+                # Bring pScheduler services back
+                dict(action=dict(module='systemd', name='pscheduler-archiver', state='started'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-runner', state='started'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='started'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-ticker', state='started'), when=paranoid),
+
+                # Start apache
+                dict(action=dict(module='systemd', name='apache2', state='started'), when=apache_restart),
+
 
                 # Restart resolver
                 #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
@@ -166,7 +201,10 @@ def prepare_connection(ssid, bssid, interface, auth):
     connection_info['time'] = elapsed_time
     connection_info['new_ip'] = ip
 
-
     json_info = json.dumps(connection_info)
+    
+    pSSID_logger.debug('Connected: %s', json_info)
+
+
     return json_info
 
