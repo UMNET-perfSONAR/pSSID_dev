@@ -2,8 +2,8 @@
 Connect to an input SSID on an input BSSID
 """
 
-import socket
 import json
+import netifaces as ni
 import shutil
 import time
 from ansible.module_utils.common.collections import ImmutableDict
@@ -124,9 +124,7 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='command', args=run_wpa_supplicant)),
 
                 # Get an IP
-                dict(action=dict(module='command', args=dhclient)),
-
-                dict(action=dict(module='command', args='hostname -I'))
+                dict(action=dict(module='command', args=dhclient))
 
                 # Restart resolver
                 #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
@@ -157,17 +155,18 @@ def prepare_connection(ssid, bssid, interface, auth):
     
     end_time = time.time()
     elapsed_time = end_time - start_time
+
+    # Get ip
+    ni.ifaddresses('wlan0')
+    ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+
     connection_info = {}
     connection_info['ssid'] = ssid
     connection_info['bssid'] = bssid
     connection_info['time'] = elapsed_time
+    connection_info['new_ip'] = ip
 
-    # Hacky script to get ip
-    # To be removed but needed now
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip_addr = s.getsockname()[0]
-    s.close()
-    return ip_addr
+
     json_info = json.dumps(connection_info)
+    return json_info
 
