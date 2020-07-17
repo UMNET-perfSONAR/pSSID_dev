@@ -20,7 +20,7 @@ from logging.handlers import SysLogHandler
 
 # Create logger
 pSSID_logger = logging.getLogger('pSSID_log')
-pSSID_logger.setLevel(logging.DEBUG)
+pSSID_logger.setLevel(logging.INFO)
 handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
 pSSID_logger.addHandler(handler)
 
@@ -203,7 +203,7 @@ def prepare_connection(ssid, bssid, interface, auth):
 
     json_info = json.dumps(connection_info)
     
-    pSSID_logger.debug('Connected: %s', json_info)
+    pSSID_logger.info('Connected: %s', json_info)
 
 
     return json_info
