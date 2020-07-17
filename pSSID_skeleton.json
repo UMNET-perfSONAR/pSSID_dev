@@ -7,8 +7,8 @@
         "example_rabbitmq_archive": {
             "archiver": "rabbitmq",
             "data": {
-                "routing-key": "pscheduler_raw",
-                "url": "amqp://elastic:elastic@elastic"
+                "_url": "amqp://elastic:elastic@elastic",
+                "routing-key": "pscheduler_raw"                
             }
         }
     },
@@ -65,68 +65,68 @@
     },
 
     "BSSID_channels": {
-	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
-	"MWireless_channels": [ 1, 2, 3, 4, 5, 10 ]
+    	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
+    	"MWireless_channels": [ 1, 2, 3, 4, 5, 10 ]
     },
 
     "SSID_profiles" : {
-	"MWireless_profile": {
-	    "SSID": "MWireless",
-	    "channels": "MWireless_channels",
-	    "channel_mismatch_warning": true,
-	    "channel_mismatch_connect": false,
+        "MWireless_profile": {
+            "SSID": "MWireless",
+            "channels": "MWireless_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
             "min_signal": -55,
-	    "min_qualifying": 1,
-	    "AuthMethod": {
-		"type": "User",
-		"UID": "fakeUID",
-		"Password": "fakepassword"
-	    }
-	},
+            "min_qualifying": 1,
+            "AuthMethod": {
+                "type": "User",
+                "UID": "fakeUID",
+                "Password": "fakepassword"
+            }
+        },
 
-	"EduRoam_profile": {
-	    "SSID": "eduroam",
-	    "channels": "EduRoam_channels",
-	    "channel_mismatch_warning": true,
-	    "channel_mismatch_connect": false,
+        "EduRoam_profile": {
+            "SSID": "eduroam",
+            "channels": "EduRoam_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
             "min_signal": -55,
-	    "min_qualifying": 0,
-	    "AuthMethod": {
-		"type": "User",
-		"UID": "fakeUID",
-		"Password": "fakepassword"
-	    }
-	}
+            "min_qualifying": 0,
+            "AuthMethod": {
+                "type": "User",
+                "UID": "fakeUID",
+                "Password": "fakepassword"
+            }
+        }
     },
 
     "SSID_groups": {
-	"all_profiles": ["EduRoam_profile", "MWireless_profile"]
+	   "all_profiles": ["EduRoam_profile", "MWireless_profile"]
     },
 
     "network_interfaces": {
-	"primary_network_interface": "wlan0",
-	"future_network_interface": "wlan1"
+    	"primary_network_interface": "wlan0",
+    	"future_network_interface": "wlan1"
     },
 
     "BSSID_scans" : {
-	"primary_BSSIDs": {
-	    "interface": "primary_network_interface",
-	    "profiles": "all_profiles",
-	    "unknown_SSID_warning": true,
-	    "schedule": [ "schedule_every_5_min" ],
-	    "priority": 1
-	}
+    	"primary_BSSIDs": {
+    	    "interface": "primary_network_interface",
+    	    "profiles": "all_profiles",
+    	    "unknown_SSID_warning": true,
+    	    "schedule": [ "schedule_every_5_min" ],
+    	    "priority": 1
+    	}
     },
 
     "tasks": {
         "example_task_rtt": {
             "profiles": ["MWireless_profile"],
-	    "BSSIDs": "primary_BSSIDs",
+            "BSSIDs": "primary_BSSIDs",
             "test": [ "example_test_rtt" ],
             "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
             "priority": 3,
-	    "ttl": 20,
+            "ttl": 30,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
@@ -134,12 +134,12 @@
 
         "example_task_throughput": {
             "profiles": "all_profiles",
-	    "BSSIDs": "primary_BSSIDs",
+            "BSSIDs": "primary_BSSIDs",
             "test": [ "example_test_throughput_ul", "example_test_throughput_dl" ],
             "archives": [ "example_rabbitmq_archive" ],
             "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
-	    "ttl": 80,
+            "ttl": 45,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }

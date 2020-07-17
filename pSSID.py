@@ -14,28 +14,120 @@ import connect_bssid
 import json
 import warnings
 import pika
-
+import psutil
 
 
 child_exited = False
 
+
+
+def list_children():
+    current_process = psutil.Process()
+    children = current_process.children(recursive=True)
+
+
+    if not children:
+        print("NO CHILDREN")
+
+    for child in children:
+        print('Child pid is {}'.format(child.pid))
+
+
+
+
 def sigh(signum, frame):
     global child_exited
     if signum == signal.SIGTERM:
-        exit(1) 
+        print("SIGTERM")
+        exit(1)
 
     if signum == signal.SIGCHLD:
-        (pid, status) = os.waitpid(-1, 0) 
+        (pid, status) = os.waitpid(-1, 0)
         print ("(SIGCHLD) child exited with status: " + str(os.WEXITSTATUS(status)), pid)
         child_exited = True
+        print("PARENT CHILD: %d %d"% (os.getpid(), pid))
 
 
 def print_bssid(diagnostic, bssid):
-    print(" ")
+    print
     print(diagnostic)
     print(bssid)
 
-def single_BSSID_qualify(bssid, ssid = {}, ssid_list=[], unknown_SSID_warn = True, scan = False, rogue_list =[]):
+
+def is_rogue(bssid, ssid_list):
+    rogue_ssid = True
+    ssid = None
+
+    for i in ssid_list:
+        # for scan check if matches any other ssid
+        if bssid["ssid"] == i["SSID"]:
+            rogue_ssid = False
+            ssid = i
+            break
+
+    return rogue_ssid, ssid
+
+
+def channel_match(bssid, ssid):
+    if bssid["channel"] not in ssid["channels"]:
+        return False
+    return True
+
+
+
+def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
+
+    rogue_list = []
+    qualified_per_ssid = {}
+    return_obj = []
+
+
+    for i in ssid_list:
+        qualified_per_ssid[i["SSID"]] = 0
+
+    for bssid in bssid_list:
+        bssid = json.loads(bssid)
+        checked_bssid = {}
+        checked_bssid["BSSID"] = bssid
+        checked_bssid["rogue_ssid"] = False
+        checked_bssid["channel_mismatch"] = False
+
+        rogue, ret_ssid = is_rogue(bssid, ssid_list)
+
+        if rogue:
+            checked_bssid["rogue_ssid"] = True
+
+            if bssid['ssid'] not in rogue_list:
+                rogue_list.append(bssid['ssid'])
+
+                if unknown_SSID_warning:
+                    diagn = "Rogue SSID: " + bssid['ssid']
+                    #print(diagn, bssid)
+        elif not channel_match(bssid, ret_ssid):
+            checked_bssid["channel_mismatch"] = True
+            if ret_ssid["channel_mismatch_warning"]:
+                diagn = "channel mismatch: for SSID " + ret_ssid["SSID"] + " " + str(ret_ssid["channels"])
+                #print(diagn, bssid)
+        elif bssid["signal"] >= ret_ssid["min_signal"]:
+            #print("min_qualify: ", json.dumps(bssid, indent = 2))
+            #print("SSID: ", json.dumps(ret_ssid, indent = 2))
+            qualified_per_ssid[ret_ssid["SSID"]] += 1
+
+        return_obj.append(checked_bssid)
+
+
+    for j in ssid_list:
+        if qualified_per_ssid[j["SSID"]] < j["min_qualifying"]:
+            print("Too few qualified_bssids for", j["SSID"])
+
+
+    return return_obj
+
+
+
+
+
+def single_BSSID_qualify(bssid, ssid):
     """
     Take in a json object representing a bssid
     Return True if criteria is met
@@ -43,56 +135,32 @@ def single_BSSID_qualify(bssid, ssid = {}, ssid_list=[], unknown_SSID_warn = Tru
     ssid is a single SSID_profiles object
     """
     ret = True
-    bssid = json.loads(bssid)
-    rogue_ssid = True
+    #bssid = json.loads(bssid)
 
-    if scan:
-        for i in ssid_list:
-            # for scan check if matches any other ssid
-            if bssid["ssid"] == i["SSID"]:
-                rogue_ssid = False
-                ssid = i
-                break
-
-
-        if rogue_ssid:
-            ret = False
-            if bssid['ssid'] not in rogue_list:
-                rogue_list.append(bssid['ssid'])
-                if unknown_SSID_warn:
-                    diagn = "Rogue SSID: " + bssid['ssid']
-                    #print(diagn, bssid)
-                rogue_ssid = True
-
-    elif bssid["ssid"] != ssid["SSID"]:
-            ret = False         
-    else:
-        rogue_ssid = False
-    
+    if bssid["ssid"] != ssid["SSID"]:
+            return False
 
     # Disqualify based on channel
-    if not rogue_ssid and bssid["channel"] not in ssid["channels"]: 
-        if ssid["channel_mismatch_warning"]:
-            diagn = "channel mismatch: for SSID " + ssid["SSID"] + " " + str(ssid["channels"])
-            #print(diagn, bssid)
+    if not channel_match(bssid, ssid):
         if not ssid["channel_mismatch_connect"]:
-            ret = False
+            ret = True
 
     # Disqualify based on signal strength
-    elif not rogue_ssid and bssid["signal"] < ssid["min_signal"]:
+    #if bssid["signal"] < ssid["min_signal"]:
+    if bssid["signal"] < -70:
         #print("SSID " + ssid["SSID"] + " low signal: ", bssid["signal"], " < ", ssid["min_signal"] )
         ret = False
 
 
 
-    return ret, ssid
-        
+    return ret
 
 
 
 
 
-def BSSID_qualify(bssid_list, ssid = {}, ssid_list=[],  unknown_SSID_warn = True, scan = False):
+
+def BSSID_qualify(bssid_list, ssid):
     """
     Take in a list of all bssids
     Returns the number of valid bssids according to the input values
@@ -100,24 +168,13 @@ def BSSID_qualify(bssid_list, ssid = {}, ssid_list=[],  unknown_SSID_warn = True
     ssid is a single SSID_profiles object
     """
     qualified_bssids = 0
-    rogue_list = []
-    qualified_per_ssid = {}
 
-    if scan:
-        for i in ssid_list:
-            qualified_per_ssid[i["SSID"]] = 0
 
     for bssid in bssid_list:
-        ret, ssid  = single_BSSID_qualify(bssid, ssid, ssid_list, unknown_SSID_warn, scan, rogue_list)
-        if ret:            
+        bssid = json.loads(bssid)
+        if single_BSSID_qualify(bssid, ssid):
             qualified_bssids += 1
-            if scan:
-                qualified_per_ssid[ssid["SSID"]] += 1
 
-    if scan:
-        for j in ssid_list:
-            if qualified_per_ssid[j["SSID"]] < j["min_qualifying"]:
-                print("Too few qualified_bssids for", j["SSID"])
 
 
     return qualified_bssids
@@ -153,15 +210,15 @@ def transform(main_obj, bssid):
         new_list.append(i)
         #print(i)
 
-    #print(script_str)
+    print(script_str)
 
     return new_list
 
 
-def debug(parsed_file, schedule):    
+def debug(parsed_file, schedule):
     #print parsed objects
     tests(parsed_file)
-    #send first runs schedule to syslog    
+    #send first runs schedule to syslog
     schedule.initial_schedule()
     schedule.print_queue()
 
@@ -212,116 +269,154 @@ schedule.initial_schedule()
 
 
 if args.debug:
-    with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, 
+    with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr,
         working_directory=os.getcwd()):
         debug(parsed_file, schedule)
         exit(0)
 
+#old_sig = None
 
 # loop forever () {
 def loop_forever():
+    #global old_sig
+    #list_children()
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel=connection.channel()
-    channel.exchange_declare(exchange='logs', exchange_type='direct')
-    result=channel.queue_declare(queue='',exclusive=True)
-    channel.queue_bind(exchange='logs', queue=result.method.queue, routing_key='pi-point')
-    
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    # channel=connection.channel()
+    # channel.exchange_declare(exchange='logs', exchange_type='direct')
+    # result=channel.queue_declare(queue='',exclusive=True)
+    # channel.queue_bind(exchange='logs', queue=result.method.queue, routing_key='pi-point')
+
     global child_exited
     pid_child = 0
-    task_ttl = 30
-    computed_TTL = 10
+    connect_ttl = 20
+    task_ttl = 0
+    computed_TTL = 0
 
-    #interface would depend
+
     interface = {}
     scanned_table = []
     bssid_list = {}
 
-    next_task = schedule.get_queue[0] 
+    next_task = schedule.get_queue[0]
     schedule.pop(next_task)
     main_obj, cron, ssid, scan = retrieve(next_task)
 
-    print("Next Task: ")
-    print_task = time.ctime(next_task.time) + \
-        " main_obj: " + main_obj["name"]
-    print (print_task)
+    if args.debug:
+        print("Next Task: ")
+        print_task = time.ctime(next_task.time) + \
+            " main_obj: " + main_obj["name"]
+        print (print_task)
 
-    while True: 
+
+    old_sig = signal.signal(signal.SIGCHLD, sigh)
+    while True:
+
+        #print(" ")
+        #print("Beginning of loop")
+        #list_children()
+        #print(" ")
 
         if scan:
+
             if next_task.time > time.time():
                 sleep_time = next_task.time - time.time()
-                print("Waiting: ", sleep_time)
-                time.sleep(sleep_time) 
+                if args.debug: print("Waiting: ", sleep_time)
+                time.sleep(sleep_time)
 
-            
+
             ssid_list = main_obj["profiles"]
+
+
 
             scanned_table = ssid_scan.get_all_bssids(main_obj["interface"])
 
-            #print("ssid_list", ssid_list)
+            # #print("ssid_list", ssid_list)
 
-            BSSID_qualify(scanned_table, ssid_list =ssid_list,  unknown_SSID_warn =main_obj["unknown_SSID_warning"], scan=True)
+            checked_bssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
 
 
-            bssid_list[main_obj["name"]] = scanned_table
+            bssid_list[main_obj["name"]] = checked_bssid
+            #print(json.dumps(bssid_list, indent=2))
             interface[main_obj["name"]] = main_obj["interface"]
+            message = json.dumps(bssid_list)
+
+            temp_connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            temp_channel=temp_connection.channel()
+            result=temp_channel.queue_declare(queue='pSSID')
+            temp_channel.basic_publish(exchange='', routing_key='pSSID', body=message)
+            temp_connection.close()
 
             schedule.reschedule(main_obj,cron, ssid, scan=True)
 
-            next_task = schedule.get_queue[0] 
+
+            next_task = schedule.get_queue[0]
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
 
-            print("Next Task: ")
-            print_task = time.ctime(next_task.time) + \
-                " main_obj: " + main_obj["name"]
-            print (print_task)
+            if args.debug:
+                print("Next Task: ")
+                print_task = time.ctime(next_task.time) + \
+                    " main_obj: " + main_obj["name"]
+                print (print_task)
 
+            child_exited = False
             continue
 
         if pid_child != 0:
-            signal.signal(signal.SIGCHLD, sigh)
-
-            for msg in channel.consume('', inactivity_timeout = computed_TTL):
-                if msg!=None:
-                    method, properties, body = msg
-                    print (body)
-                    break
-
+            #print(child_exited)
+            #print("Parent", os.getpid(), pid_child)
+            #signal.signal(signal.SIGCHLD, sigh)
+            #print(signal.getsignal(signal.SIGCHLD))
+            #print("HERE")
+            #for msg in channel.consume('', inactivity_timeout = 180):
+            #    print(child_exited)
+            #    if msg!=None:
+            #        method, properties, body = msg
+            #        print (body)
+            #        breako
+            #print(computed_TTL)
+            waittime = time.time() + computed_TTL
+            while not child_exited and time.time() < waittime:
+                continue
+            #print(computed_TTL)
             #time.sleep(computed_TTL) #will wait after ttl established
 
         elif next_task.time > time.time():
-            sleep_time = next_task.time - time.time() 
-            print("Waiting: ", sleep_time)
+            sleep_time = next_task.time - time.time()
+            if args.debug: print("Waiting: ", sleep_time)
+           # print("HERE2")
+           # for msg in channel.consume('', inactivity_timeout = sleep_time):
+           #
+           #     if msg!=None:
+           #         method, properties, body = msg
+           #         print (body)
+           #         break
+           # print("END2")
+            time.sleep(sleep_time)
 
-            for msg in channel.consume('', inactivity_timeout = sleep_time):
-                if msg!=None:
-                    method, properties, body = msg
-                    print (body)
-                    break
 
-            #time.sleep(sleep_time) 
-   
-      
-        if(pid_child != 0):            
+
+
+        if(pid_child != 0):
             if not child_exited:
-                print ("***kill child***", pid_child)
-                os.kill(pid_child, signal.SIGKILL)          
+                if args.debug: print ("***kill child***", pid_child)
+                os.kill(pid_child, signal.SIGKILL)
                 try:
                     os.wait()
                 except:
-                    print("CHILD DEAD")
+                    if args.debug: print("CHILD DEAD")
             else:
                 child_exited = False
-                # requeue SSID with schedule.py
+                #requeue SSID with schedule.py
 
             pid_child = 0
             schedule.reschedule(main_obj, cron, ssid)
-            print("NEW QUEUE:")
-            schedule.print_queue()
+            if args.debug:
+                print("NEW QUEUE:")
+                schedule.print_queue()
 
-            next_task = schedule.get_queue[0] 
+            next_task = schedule.get_queue[0]
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
 
@@ -331,12 +426,13 @@ def loop_forever():
             continue
 
 
-        
-        num_bssids = BSSID_qualify(scanned_table, ssid) 
+        task_ttl = main_obj["ttl"] + connect_ttl
+        num_bssids = BSSID_qualify(scanned_table, ssid)
 
-        # Compute task time to live
+        #Compute task time to live
         if num_bssids:
             computed_TTL = num_bssids * task_ttl
+            if args.debug: print("TTL", computed_TTL, num_bssids)
         else:
             continue
 
@@ -345,26 +441,29 @@ def loop_forever():
         pid_child = os.fork()
 
         if pid_child == 0:
-            print("CHILD")
 
-            for bssid in bssid_list[main_obj["BSSIDs"]]:
-                print("BSSID switch")
-                ret, retssid = single_BSSID_qualify(bssid, ssid)
-                if ret:
-                    bssid = json.loads(bssid)
+            signal.signal(signal.SIGCHLD, old_sig)
+            if args.debug: print("CHILD")
+
+            for item in bssid_list[main_obj["BSSIDs"]]:
+                bssid = item["BSSID"]
+                #print("SQ ",  single_BSSID_qualify(bssid, ssid))
+                if single_BSSID_qualify(bssid, ssid):
+                    if args.debug: print("Connect")
                     # Connect to bssid
-                    connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]])
+                    dest = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]])
+
+                    if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
+                        main_obj["TASK"]["test"]["spec"]["dest"] = dest
 
                     main_obj["TASK"]["archives"] = transform(main_obj, bssid)
                     pSched_task = main_obj["TASK"]
 
                     rest_api.main(pSched_task)
-
-
             exit(0)
-        
 
-        
+
+
 
 
 

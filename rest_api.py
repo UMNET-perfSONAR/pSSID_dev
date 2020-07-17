@@ -356,16 +356,16 @@ def main(TASK, o=False, s=False, q=False):
     # print
     # print result_text
 
-    if(args.o):
+    if(o):
         #stdout print
         print ("JSON Result:")
         print (json_dump(result_data))
-    if(args.s):
+    if(s):
         #syslog print
         syslog.openlog("urlsjson", 0, syslog.LOG_LOCAL3)
         syslog.syslog(syslog.LOG_DEBUG, run_data["result-href"])
         syslog.closelog()
-    if(args.q):
+    if(q):
         message = json_dump(result_data)
         #rabbitmq
         #the result_data is the json object

@@ -130,7 +130,7 @@ class Parse:
    
     #option to get a pscheduler formatted for specific task
     #running this function validates every key(archives,tests, etc) also valid
-    def create_pScheduler_task(self, given_task):
+    def create_pScheduler_task(self, given_task, given_test):
         #scheudle needs to be empty when sent to pScheduler
         taskobj = {
             "schema" : 1,
@@ -138,9 +138,9 @@ class Parse:
         }
         #validate tests
         try:
-            taskobj["test"]= self.tests[self.tasks[given_task]["test"]]
+            taskobj["test"]= self.tests[given_test]
         except:
-            print("ERROR in retrieving \"test\" from", given_task)
+            print("ERROR in retrieving \"test\" from", given_task, given_test)
             print(traceback.print_exc())        
         #validate archives
         try:
@@ -160,10 +160,10 @@ class Parse:
     # TASKS: contain formatted tasks for valid for pscheduler
     # Sched: list of cron schedule info
     # SSIDs: list of SSIDs associated with task
-    def create_pSSID_task(self, given_task):
+    def create_pSSID_task(self, given_task, given_test):
         taskobj = {}
         taskobj["name"] = given_task
-        taskobj["TASK"] = self.create_pScheduler_task(given_task)
+        taskobj["TASK"] = self.create_pScheduler_task(given_task, given_test)
 
         #Attaching schedule
         taskobj["schedule"] = self.schedule_for_task(given_task)
@@ -179,6 +179,8 @@ class Parse:
 
         taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
 
+        taskobj["ttl"] = self.tasks[given_task]["ttl"]
+
         return taskobj
 
     
@@ -187,7 +189,8 @@ class Parse:
     def pSSID_task_list(self):
         TASKS = []
         for eachtask in self.tasks:
-            TASKS.append(self.create_pSSID_task(eachtask))
+            for eachtest in self.tasks[eachtask]["test"]:
+                TASKS.append(self.create_pSSID_task(eachtask, eachtest))
 
         return TASKS
 

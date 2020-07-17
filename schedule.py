@@ -1,12 +1,9 @@
-
-
 import rest_api
 import datetime
 import json
 import time
 import traceback
 import daemon
-import os
 import sys
 import sched
 from parse_config import Parse
