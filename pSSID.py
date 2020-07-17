@@ -17,7 +17,16 @@ import pika
 import psutil
 
 
+parser = argparse.ArgumentParser(description='pSSID')
+parser.add_argument('file', action='store',
+  help='json file')
+parser.add_argument('--debug', action='store_true',
+  help='sanity check')
+args = parser.parse_args()
+
+
 child_exited = False
+DEBUG = args.debug
 
 
 
@@ -37,15 +46,17 @@ def list_children():
 
 def sigh(signum, frame):
     global child_exited
+    global DEBUG
     if signum == signal.SIGTERM:
         print("SIGTERM")
         exit(1)
 
     if signum == signal.SIGCHLD:
         (pid, status) = os.waitpid(-1, 0)
-        print ("(SIGCHLD) child exited with status: " + str(os.WEXITSTATUS(status)), pid)
         child_exited = True
-        print("PARENT CHILD: %d %d"% (os.getpid(), pid))
+        if DEBUG:
+            print ("(SIGCHLD) child exited with status: " + str(os.WEXITSTATUS(status)), pid)
+            print("PARENT CHILD: %d %d"% (os.getpid(), pid))
 
 
 def print_bssid(diagnostic, bssid):
@@ -76,6 +87,7 @@ def channel_match(bssid, ssid):
 
 
 def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
+    global DEBUG
 
     rogue_list = []
     qualified_per_ssid = {}
@@ -199,7 +211,7 @@ def transform(main_obj, bssid):
     script_str = script_str.rstrip("}")
     script_str ="\""+ script_str + insert + "}\""
 
-    append = "\"\\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
+    append = "\"\\\"test\\\": \\(.test.type), \\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
 
     #list
     archives_list = main_obj["TASK"]["archives"]
@@ -210,7 +222,7 @@ def transform(main_obj, bssid):
         new_list.append(i)
         #print(i)
 
-    print(script_str)
+    #print(script_str)
 
     return new_list
 
@@ -229,13 +241,6 @@ def retrieve(next_task):
         next_task.argument[2], \
         next_task.argument[3]
 
-
-parser = argparse.ArgumentParser(description='pSSID')
-parser.add_argument('file', action='store',
-  help='json file')
-parser.add_argument('--debug', action='store_true',
-  help='sanity check')
-args = parser.parse_args()
 
 
 # read config file
@@ -268,7 +273,7 @@ schedule.initial_schedule()
 #print
 
 
-if args.debug:
+if DEBUG:
     with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr,
         working_directory=os.getcwd()):
         debug(parsed_file, schedule)
@@ -288,6 +293,7 @@ def loop_forever():
     # channel.queue_bind(exchange='logs', queue=result.method.queue, routing_key='pi-point')
 
     global child_exited
+    global DEBUG
     pid_child = 0
     connect_ttl = 20
     task_ttl = 0
@@ -302,7 +308,7 @@ def loop_forever():
     schedule.pop(next_task)
     main_obj, cron, ssid, scan = retrieve(next_task)
 
-    if args.debug:
+    if DEBUG:
         print("Next Task: ")
         print_task = time.ctime(next_task.time) + \
             " main_obj: " + main_obj["name"]
@@ -321,7 +327,7 @@ def loop_forever():
 
             if next_task.time > time.time():
                 sleep_time = next_task.time - time.time()
-                if args.debug: print("Waiting: ", sleep_time)
+                if DEBUG: print("Waiting: ", sleep_time)
                 time.sleep(sleep_time)
 
 
@@ -354,7 +360,7 @@ def loop_forever():
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
 
-            if args.debug:
+            if DEBUG:
                 print("Next Task: ")
                 print_task = time.ctime(next_task.time) + \
                     " main_obj: " + main_obj["name"]
@@ -384,7 +390,7 @@ def loop_forever():
 
         elif next_task.time > time.time():
             sleep_time = next_task.time - time.time()
-            if args.debug: print("Waiting: ", sleep_time)
+            if DEBUG: print("Waiting: ", sleep_time)
            # print("HERE2")
            # for msg in channel.consume('', inactivity_timeout = sleep_time):
            #
@@ -400,7 +406,7 @@ def loop_forever():
 
         if(pid_child != 0):
             if not child_exited:
-                if args.debug: print ("***kill child***", pid_child)
+                if DEBUG: print ("***kill child***", pid_child)
                 os.kill(pid_child, signal.SIGKILL)
                 try:
                     os.wait()
@@ -412,7 +418,7 @@ def loop_forever():
 
             pid_child = 0
             schedule.reschedule(main_obj, cron, ssid)
-            if args.debug:
+            if DEBUG:
                 print("NEW QUEUE:")
                 schedule.print_queue()
 
@@ -432,7 +438,7 @@ def loop_forever():
         #Compute task time to live
         if num_bssids:
             computed_TTL = num_bssids * task_ttl
-            if args.debug: print("TTL", computed_TTL, num_bssids)
+            if DEBUG: print("TTL", computed_TTL, num_bssids)
         else:
             continue
 
@@ -443,13 +449,13 @@ def loop_forever():
         if pid_child == 0:
 
             signal.signal(signal.SIGCHLD, old_sig)
-            if args.debug: print("CHILD")
+            if DEBUG: print("CHILD")
 
             for item in bssid_list[main_obj["BSSIDs"]]:
                 bssid = item["BSSID"]
                 #print("SQ ",  single_BSSID_qualify(bssid, ssid))
                 if single_BSSID_qualify(bssid, ssid):
-                    if args.debug: print("Connect")
+                    if DEBUG: print("Connect")
                     # Connect to bssid
                     dest = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]])
 

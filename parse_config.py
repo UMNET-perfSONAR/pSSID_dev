@@ -224,7 +224,7 @@ def tests(p):
     print
 
     #pscheduler task
-    psched = p.create_pScheduler_task("example_task_rtt")
+    psched = p.create_pScheduler_task("example_task_throughput", "example_test_throughput_ul")
     print(psched)
     print
     print
@@ -233,7 +233,7 @@ def tests(p):
 
 
     #pSSID task
-    pssid = p.create_pSSID_task("example_task_rtt")
+    pssid = p.create_pSSID_task("example_task_throughput", "example_test_throughput_ul")
     print(pssid)
     print
     print

@@ -302,6 +302,7 @@ def main(TASK, o=False, s=False, q=False):
                     + (sleep_time.seconds) \
                     + (sleep_time.microseconds / (10.0**6))
 
+    sleep_seconds += 15
     # print
     # print "Waiting", sleep_seconds, "seconds for run to finish..."
     time.sleep(sleep_seconds)
