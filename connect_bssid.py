@@ -57,6 +57,7 @@ def prepare_connection(ssid, bssid, interface, auth):
 
     paranoid = False
     apache_restart = False
+    postgres_restart = False
 
     start_time = time.time()
 
@@ -121,6 +122,9 @@ def prepare_connection(ssid, bssid, interface, auth):
                 # Stop apache
                 dict(action=dict(module='systemd', name='apache2', state='stopped'), when=apache_restart),
 
+                # Stop postgres
+                dict(action=dict(module='systemd', name='postgresql', state='stopped'), when=postgres_restart),
+
                 # Remove default route to make dhclient happy
                 dict(action=dict(module='command', args='ip route del default'), ignore_errors='yes'),
 
@@ -160,6 +164,7 @@ def prepare_connection(ssid, bssid, interface, auth):
                 # Start apache
                 dict(action=dict(module='systemd', name='apache2', state='started'), when=apache_restart),
 
+                dict(action=dict(module='systemd', name='postgresql', state='started'), when=postgres_restart),
 
                 # Restart resolver
                 #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
