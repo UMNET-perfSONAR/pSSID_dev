@@ -197,8 +197,9 @@ def prepare_connection(ssid, bssid, interface, auth):
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
 
     # Wait for pscheduler to come back
-    print('Sleeping for', wait_time)
-    time.sleep(wait_time)
+    if wait_time != 0:
+        print('Sleeping for', wait_time)
+        time.sleep(wait_time)
     
     end_time = time.time()
     elapsed_time = end_time - start_time
