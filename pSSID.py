@@ -231,7 +231,6 @@ def debug(parsed_file, schedule):
     #print parsed objects
     tests(parsed_file)
     #send first runs schedule to syslog
-    schedule.initial_schedule()
     schedule.print_queue()
 
 
@@ -241,6 +240,14 @@ def retrieve(next_task):
         next_task.argument[2], \
         next_task.argument[3]
 
+
+def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = ""):
+    
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel=temp_connection.channel()
+    result=channel.queue_declare(queue=queue_name)
+    channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
+    connection.close()
 
 
 # read config file
@@ -347,11 +354,13 @@ def loop_forever():
             interface[main_obj["name"]] = main_obj["interface"]
             message = json.dumps(bssid_list)
 
-            temp_connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-            temp_channel=temp_connection.channel()
-            result=temp_channel.queue_declare(queue='pSSID')
-            temp_channel.basic_publish(exchange='', routing_key='pSSID', body=message)
-            temp_connection.close()
+            rabbitmqQueue(message, "pSSID", "pSSID")
+
+            # temp_connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+            # temp_channel=temp_connection.channel()
+            # result=temp_channel.queue_declare(queue='pSSID')
+            # temp_channel.basic_publish(exchange='', routing_key='pSSID', body=message)
+            # temp_connection.close()
 
             schedule.reschedule(main_obj,cron, ssid, scan=True)
 
@@ -467,7 +476,10 @@ def loop_forever():
                     # Connect to bssid
                     connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
 
+                    rabbitmqQueue(connection_info, "pSSID", "pSSID")
+
                     connection_json = json.loads(connection_info)
+
 
                     if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
                         main_obj["TASK"]["test"]["spec"]["dest"] = connection_json["new_ip"]

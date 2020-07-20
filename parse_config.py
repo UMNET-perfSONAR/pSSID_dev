@@ -162,7 +162,7 @@ class Parse:
     # SSIDs: list of SSIDs associated with task
     def create_pSSID_task(self, given_task, given_test):
         taskobj = {}
-        taskobj["name"] = given_task
+        taskobj["name"] = given_test
         taskobj["TASK"] = self.create_pScheduler_task(given_task, given_test)
 
         #Attaching schedule

@@ -7,7 +7,7 @@
         "example_rabbitmq_archive": {
             "archiver": "rabbitmq",
             "data": {
-                "_url": "amqp://elastic:elastic@elastic",
+                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
                 "routing-key": "pscheduler_raw"                
             }
         }
