@@ -465,10 +465,12 @@ def loop_forever():
                 if single_BSSID_qualify(bssid, ssid):
                     if DEBUG: print("Connect")
                     # Connect to bssid
-                    dest = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]])
+                    connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
+
+                    connection_json = json.loads(connection_info)
 
                     if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
-                        main_obj["TASK"]["test"]["spec"]["dest"] = dest
+                        main_obj["TASK"]["test"]["spec"]["dest"] = connection_json["new_ip"]
 
                     main_obj["TASK"]["archives"] = transform(main_obj, bssid)
                     pSched_task = main_obj["TASK"]
