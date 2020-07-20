@@ -48,7 +48,7 @@ def sigh(signum, frame):
     global child_exited
     global DEBUG
     if signum == signal.SIGTERM:
-        print("SIGTERM")
+        #print("SIGTERM")
         exit(1)
 
     if signum == signal.SIGCHLD:
@@ -440,6 +440,14 @@ def loop_forever():
             computed_TTL = num_bssids * task_ttl
             if DEBUG: print("TTL", computed_TTL, num_bssids)
         else:
+            schedule.reschedule(main_obj, cron, ssid)
+            if DEBUG:
+                print("NEW QUEUE:")
+                schedule.print_queue()
+
+            next_task = schedule.get_queue[0]
+            schedule.pop(next_task)
+            main_obj, cron, ssid, scan = retrieve(next_task)
             continue
 
 
