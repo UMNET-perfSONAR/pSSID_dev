@@ -58,6 +58,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     paranoid = False
     apache_restart = False
     postgres_restart = False
+    wait_time = 0
 
     start_time = time.time()
 
@@ -119,10 +120,10 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='systemd', name='pscheduler-scheduler', state='stopped'), when=paranoid),
                 dict(action=dict(module='systemd', name='pscheduler-ticker', state='stopped'), when=paranoid),
 
-                # Stop apache
+                # Stop apache if toggled
                 dict(action=dict(module='systemd', name='apache2', state='stopped'), when=apache_restart),
 
-                # Stop postgres
+                # Stop postgres if toggled
                 dict(action=dict(module='systemd', name='postgresql', state='stopped'), when=postgres_restart),
 
                 # Remove default route to make dhclient happy
@@ -161,10 +162,12 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='systemd', name='pscheduler-scheduler', state='started'), when=paranoid),
                 dict(action=dict(module='systemd', name='pscheduler-ticker', state='started'), when=paranoid),
 
-                # Start apache
+                # Start apache if toggled
                 dict(action=dict(module='systemd', name='apache2', state='started'), when=apache_restart),
 
+                # Start postgres if toggled
                 dict(action=dict(module='systemd', name='postgresql', state='started'), when=postgres_restart),
+
 
                 # Restart resolver
                 #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
@@ -192,6 +195,10 @@ def prepare_connection(ssid, bssid, interface, auth):
 
         # Remove ansible tmpdir
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
+
+    # Wait for pscheduler to come back
+    print('Sleeping for', wait_time)
+    time.sleep(wait_time)
     
     end_time = time.time()
     elapsed_time = end_time - start_time
