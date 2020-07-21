@@ -5,6 +5,15 @@ Uses iwlist and must be run as root
 
 from wifi import Cell, Scheme
 import json
+import logging
+from logging.handlers import SysLogHandler
+import time
+
+# Create logger
+pSSID_logger = logging.getLogger('pSSID_log')
+pSSID_logger.setLevel(logging.INFO)
+handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
+pSSID_logger.addHandler(handler)
 
 
 def get_all_bssids(interface):
@@ -12,6 +21,7 @@ def get_all_bssids(interface):
     Scan the given interface for all bssids
     Return a list of json objects representing all bssids
     """
+    start_time = time.time()
     cells = Cell.all(interface) # Specify interface to scan on
 
     wifi_list = []
@@ -29,6 +39,11 @@ def get_all_bssids(interface):
         bssid = json.dumps(bssid)
         wifi_list.append(bssid)
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    log_msg = "Scan finished in " + str(elapsed_time)
+    pSSID_logger.info(log_msg)
+
     return wifi_list
 
 
@@ -37,6 +52,7 @@ def print_ssid(interface, ssid):
     Scan on the given interface
     Return a list of all bssids with the given ssid
     """
+    start_time = time.time()
     all_bssids = get_all_bssids(interface)
     ssid_list = []
 
@@ -48,3 +64,9 @@ def print_ssid(interface, ssid):
 
     for entry in ssid_list:
         print(entry)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    log_msg = "Scan finished in " + str(elapsed_time)
+    pSSID_logger.info(log_msg)
+
