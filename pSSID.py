@@ -133,7 +133,7 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
             print("Too few qualified_bssids for", j["SSID"])
 
 
-    return return_obj
+    return return_obj, qualified_per_ssid
 
 
 
@@ -155,7 +155,7 @@ def single_BSSID_qualify(bssid, ssid):
     # Disqualify based on channel
     if not channel_match(bssid, ssid):
         if not ssid["channel_mismatch_connect"]:
-            ret = True
+            ret = False
 
     # Disqualify based on signal strength
     #if bssid["signal"] < ssid["min_signal"]:
@@ -346,7 +346,19 @@ def loop_forever():
 
             # #print("ssid_list", ssid_list)
 
-            checked_bssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
+            checked_bssid, qualified_per_ssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
+
+            bssid_list["operation"] = "scan"
+            bssid_list["SSID_bad_coverage"] = []
+
+            for j in ssid_list:
+                if qualified_per_ssid[j["SSID"]] < j["min_qualifying"]:
+                    obj = {}
+                    obj["SSID"] = j["SSID"]
+                    obj["min_qualifying_BSSID"] = j["min_qualifying"]
+                    obj["min_signal"] = j["min_signal"]
+                    obj["qualified_BSSIDs"] = qualified_per_ssid[j["SSID"]]
+                    bssid_list["SSID_bad_coverage"].append(obj)
 
 
             bssid_list[main_obj["name"]] = checked_bssid
