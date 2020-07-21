@@ -66,7 +66,7 @@
 
     "BSSID_channels": {
     	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
-    	"MWireless_channels": [ 1, 2, 3, 4, 5, 10 ]
+    	"MWireless_channels": [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36 ]
     },
 
     "SSID_profiles" : {
@@ -75,7 +75,7 @@
             "channels": "MWireless_channels",
             "channel_mismatch_warning": true,
             "channel_mismatch_connect": false,
-            "min_signal": -55,
+            "min_signal": -73,
             "min_qualifying": 1,
             "AuthMethod": {
                 "type": "User",
@@ -89,7 +89,7 @@
             "channels": "EduRoam_channels",
             "channel_mismatch_warning": true,
             "channel_mismatch_connect": false,
-            "min_signal": -55,
+            "min_signal": -70,
             "min_qualifying": 0,
             "AuthMethod": {
                 "type": "User",

@@ -244,7 +244,7 @@ def retrieve(next_task):
 def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = ""):
     
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel=temp_connection.channel()
+    channel=connection.channel()
     result=channel.queue_declare(queue=queue_name)
     channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
     connection.close()
