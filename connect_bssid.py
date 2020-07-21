@@ -213,11 +213,11 @@ def prepare_connection(ssid, bssid, interface, auth):
     connection_info['bssid'] = bssid
     connection_info['time'] = elapsed_time
     connection_info['new_ip'] = ip
+    connection_info['operation'] = 'connection'
 
     json_info = json.dumps(connection_info)
     
     pSSID_logger.info('Connected: %s', json_info)
-
 
     return json_info
 
