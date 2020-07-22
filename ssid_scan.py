@@ -52,7 +52,6 @@ def print_ssid(interface, ssid):
     Scan on the given interface
     Return a list of all bssids with the given ssid
     """
-    start_time = time.time()
     all_bssids = get_all_bssids(interface)
     ssid_list = []
 
@@ -64,9 +63,4 @@ def print_ssid(interface, ssid):
 
     for entry in ssid_list:
         print(entry)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    log_msg = "Scan finished in " + str(elapsed_time)
-    pSSID_logger.info(log_msg)
 
