@@ -5,15 +5,8 @@ Uses iwlist and must be run as root
 
 from wifi import Cell, Scheme
 import json
-import logging
-from logging.handlers import SysLogHandler
+import syslog
 import time
-
-# Create logger
-pSSID_logger = logging.getLogger('scan_logger')
-pSSID_logger.setLevel(logging.INFO)
-handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
-pSSID_logger.addHandler(handler)
 
 
 def get_all_bssids(interface):
@@ -42,7 +35,8 @@ def get_all_bssids(interface):
     end_time = time.time()
     elapsed_time = end_time - start_time
     log_msg = "Scan finished in " + str(elapsed_time)
-    pSSID_logger.info(log_msg)
+
+    syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, log_msg)
 
     return wifi_list
 

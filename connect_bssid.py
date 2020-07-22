@@ -16,14 +16,7 @@ from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
-import logging
-from logging.handlers import SysLogHandler
-
-# Create logger
-pSSID_logger = logging.getLogger('connection_logger')
-pSSID_logger.setLevel(logging.INFO)
-handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
-pSSID_logger.addHandler(handler)
+import syslog
 
 
 DEBUG = False
@@ -54,7 +47,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     Decide connect method and config file based on auth
     """
     connect_msg = "Connecting to " + ssid + " on " + bssid
-    pSSID_logger.info(connect_msg)
+    syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, connect_msg)
 
     paranoid = False
     apache_restart = False
@@ -224,9 +217,11 @@ def prepare_connection(ssid, bssid, interface, auth):
     
     # Log status of connection
     if connected:
-        pSSID_logger.info('Connected: %s', json_info)
+        log_msg = 'Connected: ' + json_info
+        syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, log_msg)
     else:
-        pSSID_logger.error('Failed to connect: %s', json_info)
+        log_msg = 'Failed to connect: ' + json_info
+        syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, log_msg)
 
-    return connection_info
+    return json_info
 
