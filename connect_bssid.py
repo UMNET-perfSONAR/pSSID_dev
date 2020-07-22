@@ -20,7 +20,7 @@ import logging
 from logging.handlers import SysLogHandler
 
 # Create logger
-pSSID_logger = logging.getLogger('pSSID_log')
+pSSID_logger = logging.getLogger('connection_logger')
 pSSID_logger.setLevel(logging.INFO)
 handler = logging.handlers.SysLogHandler(address = '/dev/log', facility='local3')
 pSSID_logger.addHandler(handler)
