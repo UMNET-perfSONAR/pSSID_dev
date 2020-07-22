@@ -59,7 +59,7 @@ TASK = {
 # the address or host name for a source interface, the lead must be a
 # system where that interface exists.
 
-LEAD = "localhost"
+#LEAD = "localhost"
 
 
 # -----------------------------------------------------------------------------
@@ -214,10 +214,17 @@ def url_post( url,          # GET URL
 # Post the task to the server's "tasks" endpoint
 #
 
-tasks_url = "https://%s/pscheduler/tasks" % (LEAD)
+
 #print "Posting to", tasks_url
 
 def main(TASK, o=False, s=False, q=False):
+    if "source" in TASK["test"]["spec"].keys():
+        LEAD = TASK["test"]["spec"]["source"]
+    else:
+        LEAD = "localhost"
+
+    tasks_url = "https://%s/pscheduler/tasks" % (LEAD)
+
     try:
         status, task_url = url_post(tasks_url, data=json_dump(TASK))
     except Exception as ex:

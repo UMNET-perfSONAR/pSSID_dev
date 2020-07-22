@@ -130,7 +130,7 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
 
     for j in ssid_list:
         if qualified_per_ssid[j["SSID"]] < j["min_qualifying"]:
-            print("Too few qualified_bssids for", j["SSID"])
+            if DEBUG: print("Too few qualified_bssids for", j["SSID"])
 
 
     return return_obj, qualified_per_ssid
@@ -195,7 +195,8 @@ def BSSID_qualify(bssid_list, ssid):
 
 def transform(main_obj, bssid):
     transform = {}
-    transform["time"] = time.ctime(time.time())
+    #transform["time"] = time.ctime(time.time())
+    #pscheduelr logs its own timestamp
     transform["SSID"] = bssid["ssid"]
     transform["BSSID"] = bssid["address"]
     transform["ESSID"] = bssid["ssid"]
@@ -205,20 +206,27 @@ def transform(main_obj, bssid):
     transform["frequency"] = bssid["frequency"]
 
 
+    #for syslog:
     script_str = psjson.json_dump(transform)
     insert = ", \\(.)"
     script_str = script_str.replace("\"", "\\\"")
     script_str = script_str.rstrip("}")
     script_str ="\""+ script_str + insert + "}\""
 
-    append = "\"\\\"test\\\": \\(.test.type), \\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
+    append = "\"\\\"test\\\": \\\"\\(.test.type)\\\", \\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
 
     #list
     archives_list = main_obj["TASK"]["archives"]
     new_list = []
     for i in archives_list:
+
         i["transform"] = {}
-        i["transform"]["script"] = append + script_str
+        if i["archiver"] == "rabbitmq":
+            i["transform"]["script"] = '.pSSID = '  + json.dumps(transform)
+        else:    
+            i["transform"]["script"] = append + script_str #tested and works with syslog
+        
+
         new_list.append(i)
         #print(i)
 
@@ -230,7 +238,6 @@ def transform(main_obj, bssid):
 def debug(parsed_file, schedule):
     #print parsed objects
     tests(parsed_file)
-    #send first runs schedule to syslog
     schedule.print_queue()
 
 
@@ -492,6 +499,10 @@ def loop_forever():
 
                     connection_json = json.loads(connection_info)
 
+                    #if connection fails, it won't run any test
+                    if !connection_json["connected"]:
+                        if DEBUG: print("Connection Failed")
+                        continue
 
                     if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
                         main_obj["TASK"]["test"]["spec"]["dest"] = connection_json["new_ip"]
