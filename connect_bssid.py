@@ -6,6 +6,7 @@ import json
 import netifaces as ni
 import shutil
 import time
+import bssid_validator
 from ansible.module_utils.common.collections import ImmutableDict
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
@@ -109,9 +110,10 @@ def prepare_connection(ssid, bssid, interface, auth):
 
                 # Check for wpa_supplicant file
                 dict(action=dict(module='stat', path=wpa_supp_path), register='wpa_exists'),
-
+                
                 # Exit play if wpa_supplicant is not found
                 dict(action=dict(module='debug', msg='Could not find wpa_supplicant with given ssid'), when='not wpa_exists.stat.exists'),
+                #dict(action=dict(module='fail', msg='Could not find wpa_supplicant for given ssid'), when='not wpa_exists.stat.exists'),
                 dict(action=dict(module='meta', args='end_play'), when='not wpa_exists.stat.exists'),
 
                 # Take down pscheduler services if in paranoid mode
@@ -168,7 +170,6 @@ def prepare_connection(ssid, bssid, interface, auth):
                 # Start postgres if toggled
                 dict(action=dict(module='systemd', name='postgresql', state='started'), when=postgres_restart),
 
-
                 # Restart resolver
                 #dict(action=dict(module='systemd', state='restarted', name='systemd-resolved'))
              ]
@@ -204,6 +205,9 @@ def prepare_connection(ssid, bssid, interface, auth):
     end_time = time.time()
     elapsed_time = end_time - start_time
 
+    # Check if connection is successful
+    connected = bssid_validator.validate_connect(bssid)
+
     # Get ip
     ni.ifaddresses('wlan0')
     ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
@@ -214,6 +218,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     connection_info['time'] = elapsed_time
     connection_info['new_ip'] = ip
     connection_info['operation'] = 'connection'
+    connection_info['connected'] = connected
 
     json_info = json.dumps(connection_info)
     
