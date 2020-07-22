@@ -10,6 +10,13 @@
                 "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
                 "routing-key": "pscheduler_raw"                
             }
+        },
+        "example_syslog_archive": {
+            "archiver": "syslog",
+            "data": {
+                "ident": "pSSID22 result",
+                "facility" : "local3"
+            }
         }
     },
 
@@ -123,10 +130,10 @@
             "profiles": ["MWireless_profile"],
             "BSSIDs": "primary_BSSIDs",
             "test": [ "example_test_rtt" ],
-            "archives": [ "example_rabbitmq_archive" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
             "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
             "priority": 3,
-            "ttl": 30,
+            "ttl": 45,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }
@@ -136,10 +143,10 @@
             "profiles": "all_profiles",
             "BSSIDs": "primary_BSSIDs",
             "test": [ "example_test_throughput_ul", "example_test_throughput_dl" ],
-            "archives": [ "example_rabbitmq_archive" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
             "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
-            "ttl": 45,
+            "ttl": 60,
             "_meta": {
                 "display-name": "Example RTT Tests"
             }

@@ -494,18 +494,19 @@ def loop_forever():
                     if DEBUG: print("Connect")
                     # Connect to bssid
                     connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
+                    connection_info["meta"] = bssid
 
-                    rabbitmqQueue(connection_info, "pSSID", "pSSID")
-
-                    connection_json = json.loads(connection_info)
+                    connection_string = json.dumps(connection_info)
+                    rabbitmqQueue(connection_string, "pSSID", "pSSID")
+                    
 
                     #if connection fails, it won't run any test
-                    if !connection_json["connected"]:
+                    if not connection_info["connected"]:
                         if DEBUG: print("Connection Failed")
                         continue
 
                     if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
-                        main_obj["TASK"]["test"]["spec"]["dest"] = connection_json["new_ip"]
+                        main_obj["TASK"]["test"]["spec"]["dest"] = connection_info["new_ip"]
 
                     main_obj["TASK"]["archives"] = transform(main_obj, bssid)
                     pSched_task = main_obj["TASK"]

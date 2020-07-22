@@ -228,5 +228,5 @@ def prepare_connection(ssid, bssid, interface, auth):
     else:
         pSSID_logger.error('Failed to connect: %s', json_info)
 
-    return json_info
+    return connection_info
 
