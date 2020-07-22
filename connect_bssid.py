@@ -222,7 +222,11 @@ def prepare_connection(ssid, bssid, interface, auth):
 
     json_info = json.dumps(connection_info)
     
-    pSSID_logger.info('Connected: %s', json_info)
+    # Log status of connection
+    if connected:
+        pSSID_logger.info('Connected: %s', json_info)
+    else:
+        pSSID_logger.error('Failed to connect: %s', json_info)
 
     return json_info
 
