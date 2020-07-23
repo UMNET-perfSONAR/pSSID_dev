@@ -1,7 +1,9 @@
 {
-    "_meta":{
-        "display-name": "Example Measurements"
+    "meta":{
+        "probe_name": "RPi1",
+	"probe_location": "Winterhall"
     },
+	
 
     "archives": {
         "example_rabbitmq_archive": {
