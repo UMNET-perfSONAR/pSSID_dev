@@ -1,7 +1,9 @@
 {
-    "meta":{
-        "probe_name": "RPi1",
-	"probe_location": "Winterhall"
+    "meta_information":{
+        "probe_stats": {
+	    "probe_name": "RPi1",
+	    "probe_location": "Winterhall"
+	}
     },
 	
 
@@ -136,9 +138,9 @@
             "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
             "priority": 3,
             "ttl": 45,
-            "_meta": {
-                "display-name": "Example RTT Tests"
-            }
+            "meta_information": [
+                "probe_stats"
+            ]
         },
 
         "example_task_throughput": {
@@ -149,9 +151,9 @@
             "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
             "ttl": 60,
-            "_meta": {
-                "display-name": "Example RTT Tests"
-            }
+            "meta_information": [
+                "probe_stats"
+            ]
         }
     }
 }
