@@ -204,6 +204,7 @@ def transform(main_obj, bssid):
     transform["task"] = main_obj["name"]
     transform["signal"] = bssid["signal"]
     transform["frequency"] = bssid["frequency"]
+    transform["meta"] = main_obj["meta"]
 
 
     #for syslog:
@@ -355,6 +356,8 @@ def loop_forever():
 
             checked_bssid, qualified_per_ssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
 
+
+            bssid_list["meta"] = main_obj["meta"]
             bssid_list["operation"] = "scan"
             bssid_list["SSID_bad_coverage"] = []
 
@@ -494,7 +497,8 @@ def loop_forever():
                     if DEBUG: print("Connect")
                     # Connect to bssid
                     connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
-                    connection_info["meta"] = bssid
+                    connection_info["bssid_info"] = bssid
+                    connection_info["meta"] = main_obj["meta"]
 
                     connection_string = json.dumps(connection_info)
                     rabbitmqQueue(connection_string, "pSSID", "pSSID")

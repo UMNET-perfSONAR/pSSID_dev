@@ -1,9 +1,9 @@
 {
     "meta_information":{
         "probe_stats": {
-	    "probe_name": "RPi1",
-	    "probe_location": "Winterhall"
-	}
+    	    "probe_name": "RPi1",
+    	    "probe_location": "Winterhall"
+    	}
     },
 	
 
@@ -87,7 +87,7 @@
             "channel_mismatch_warning": true,
             "channel_mismatch_connect": false,
             "min_signal": -73,
-            "min_qualifying": 1,
+            "min_qualifying": 5,
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
@@ -101,7 +101,7 @@
             "channel_mismatch_warning": true,
             "channel_mismatch_connect": false,
             "min_signal": -70,
-            "min_qualifying": 0,
+            "min_qualifying": 5,
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
@@ -125,7 +125,10 @@
     	    "profiles": "all_profiles",
     	    "unknown_SSID_warning": true,
     	    "schedule": [ "schedule_every_5_min" ],
-    	    "priority": 1
+    	    "priority": 1,
+            "meta_information": [
+                "probe_stats"
+            ]
     	}
     },
 

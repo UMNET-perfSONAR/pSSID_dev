@@ -20,6 +20,10 @@ def scan_bssids(self):
 
             scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
             scan_obj["priority"] = scan_profile["priority"]
+            
+            scan_obj["meta"] = []
+            for k in scan_profile["meta_information"]:
+                scan_obj["meta"].append(self.meta[k])
         except:
             print("ERROR in retrieving \"BSSID_scans\"")
             print(traceback.print_exc())
@@ -180,6 +184,12 @@ class Parse:
         taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
 
         taskobj["ttl"] = self.tasks[given_task]["ttl"]
+
+        task_obj["meta"] = []
+        for k in self.tasks[given_task]["meta_information"]:
+            task_obj["meta"].append(self.meta[k])
+
+        
 
         return taskobj
 

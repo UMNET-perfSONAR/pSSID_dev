@@ -99,9 +99,9 @@ class Schedule:
 
 		print (print_syslog)
 
-		syslog.openlog("NEWSCHED", 0, syslog.LOG_LOCAL3)
-		syslog.syslog(syslog.LOG_DEBUG, print_syslog)
-		syslog.closelog()
+		#syslog.openlog("NEWSCHED", 0, syslog.LOG_LOCAL3)
+		#syslog.syslog(syslog.LOG_DEBUG, print_syslog)
+		#syslog.closelog()
 
 
 	
