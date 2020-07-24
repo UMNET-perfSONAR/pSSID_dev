@@ -288,11 +288,11 @@ schedule.initial_schedule()
 #print
 
 
-if DEBUG:
-    with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr,
-        working_directory=os.getcwd()):
-        debug(parsed_file, schedule)
-        exit(0)
+# if DEBUG:
+#     with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr,
+#         working_directory=os.getcwd()):
+#         debug(parsed_file, schedule)
+        #exit(0)
 
 #old_sig = None
 
@@ -523,5 +523,8 @@ def loop_forever():
 
 
 
-with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr):
+with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, working_directory=os.getcwd()):
+    if DEBUG:
+        debug(parsed_file, schedule)
+    
     loop_forever()
