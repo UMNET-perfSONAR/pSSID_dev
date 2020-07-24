@@ -130,6 +130,9 @@ def prepare_connection(ssid, bssid, interface, auth):
                 # Kill wpa_supplicant
                 dict(action=dict(module='command', args='killall wpa_supplicant'), ignore_errors='yes'),
 
+                # Kill dhclient
+                dict(action=dict(module='command', args='killall dhclient'), ignore_errors='yes'),
+
                 # Bring WiFi interface down
                 dict(action=dict(module='command', args= bring_down)),
 
