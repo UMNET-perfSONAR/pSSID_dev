@@ -126,9 +126,7 @@
     	    "unknown_SSID_warning": true,
     	    "schedule": [ "schedule_every_5_min" ],
     	    "priority": 1,
-            "meta_information": [
-                "probe_stats"
-            ]
+            "meta_information": "probe_stats"
     	}
     },
 
@@ -141,9 +139,7 @@
             "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
             "priority": 3,
             "ttl": 45,
-            "meta_information": [
-                "probe_stats"
-            ]
+            "meta_information": "probe_stats"
         },
 
         "example_task_throughput": {
@@ -154,9 +150,7 @@
             "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
             "ttl": 60,
-            "meta_information": [
-                "probe_stats"
-            ]
+            "meta_information": "probe_stats"
         }
     }
 }

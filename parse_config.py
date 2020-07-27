@@ -21,9 +21,7 @@ def scan_bssids(self):
             scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
             scan_obj["priority"] = scan_profile["priority"]
             
-            scan_obj["meta"] = []
-            for k in scan_profile["meta_information"]:
-                scan_obj["meta"].append(self.meta[k])
+            scan_obj["meta"] = self.meta[scan_profile["meta_information"]]
         except:
             print("ERROR in retrieving \"BSSID_scans\"")
             print(traceback.print_exc())
@@ -64,7 +62,7 @@ class Parse:
         json_obj =  psjson.json_load(source=config_file)
 
         try:
-            self.meta = json_obj["_meta"]
+            self.meta = json_obj["meta_information"]
             self.archives = json_obj["archives"]
             self.tests = json_obj["tests"]
             self.schedules = json_obj["schedules"]
@@ -185,16 +183,11 @@ class Parse:
 
         taskobj["ttl"] = self.tasks[given_task]["ttl"]
 
-        task_obj["meta"] = []
-        for k in self.tasks[given_task]["meta_information"]:
-            task_obj["meta"].append(self.meta[k])
-
-        
+        taskobj["meta"] = self.meta[self.tasks[given_task]["meta_information"]]
 
         return taskobj
 
     
-
     #option to return list of pSSID task objects. Dict keys: TASK, Sched, SSIDS
     def pSSID_task_list(self):
         TASKS = []

@@ -13,13 +13,6 @@ import argparse
 count = 0
 
 
-# def custom_time():
-# 	temp_time = 0
-# 	temp_time = time.gmtime(time.time())
-# 	return time.mktime(temp_time)
-
-
-
 def run_schedule(obj, cron, ssid, scan):
 	global count
 	count += 1
@@ -30,8 +23,6 @@ def run_schedule(obj, cron, ssid, scan):
 	if not scan:
 		print ("SSID: ", str(ssid["name"]))
 		print ("Result URL: ")
-		#reschedule should be sent an offset time
-		#s.reschedule(eachtask, name, eachssid)
 		rest_api.main(obj["TASK"])
 
 	print
@@ -48,9 +39,7 @@ class Schedule:
 
 	
 
-	#this function should be called right after testing loop is reached
-    #reschedule needs an offset
-    #reschedule takes care of specific specific ssid for a specific task
+	
 	def reschedule(self,given_obj, given_cron, given_ssid = {}, given_time=time.time(), scan = False):
 		set_time = time.time()
 		if given_time > time.time():
@@ -65,9 +54,6 @@ class Schedule:
 
 
 	#schedules for all tasks at the start
-	#"main" needs to be replaced with loop that tests each SSID
-	#returns schedule queue
-	#if this is called again insted of rschedule, the task that have not run will be scheduled twice for the same time
 	def initial_schedule(self, given_time=time.time()):
 		SCANS = self.p.all_scans	#SCANS is a dict
 		for eachscan in SCANS.values():
@@ -98,10 +84,6 @@ class Schedule:
 				" Test: " + event.argument[0]["name"]
 
 		print (print_syslog)
-
-		#syslog.openlog("NEWSCHED", 0, syslog.LOG_LOCAL3)
-		#syslog.syslog(syslog.LOG_DEBUG, print_syslog)
-		#syslog.closelog()
 
 
 	
@@ -158,7 +140,6 @@ class Schedule:
 				min_time = min(min_time, curr_time)
 
 				if curr_time <= end_time:
-					#print("FAKESCHED: ", time.ctime(curr_time))
 					self.s.enterabs(curr_time, test["i"].argument[0]["priority"], run_schedule, argument = test["i"].argument)
 			
 			fake_time = min_time
@@ -237,9 +218,7 @@ def main():
 		#check for valid time range and parse it
 		start_time = args.start
 
-		#TODO: check number of options provided
-		#num_opts = time_range.count("-")
-
+		
 		try:
 			#all strings	
 			year = (start_time.split("-")[0]).lstrip().rstrip()
@@ -253,9 +232,7 @@ def main():
 			exit(1)
 		
 		
-		#TODO: are they all digits?
-
-
+		
 		start_str = year+" "+month+" "+day+" "+hour+" "+minute
 
 		try:
@@ -289,7 +266,6 @@ def main():
 
 
 if __name__ == '__main__':
-	with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, working_directory=os.getcwd()):
-		main()
+	main()
 
 

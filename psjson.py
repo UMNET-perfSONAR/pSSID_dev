@@ -5,9 +5,8 @@ Functions for inhaling JSON in a pScheduler-normalized way
 from json import load, loads, dump, dumps
 import string
 import sys
-#import pscheduler
 from io import IOBase
-from psselect import polled_select
+#from psselect import polled_select
 
 
 def json_decomment(json, prefix='#', null=False):
@@ -167,69 +166,69 @@ def json_dump(obj, dest=None, pretty=False):
 # Classes for reading and writing streaming JSON per RFC 7464
 #
 
-class RFC7464Emitter(object):
-    """Emit JSON documents to a file handle in RFC 7464 format"""
+# class RFC7464Emitter(object):
+#     """Emit JSON documents to a file handle in RFC 7464 format"""
 
-    def __init__(self, handle, timeout=None):
+#     def __init__(self, handle, timeout=None):
 
-        if type(handle) != file:
-            raise TypeError("Handle must be a file.")
+#         if type(handle) != file:
+#             raise TypeError("Handle must be a file.")
 
-        self.handle = handle
-        self.timeout = timeout
-
-
-    def emit_text(self, text):
-        """Emit straight text to the file"""
-
-        if self.timeout is not None:
-            if polled_select([],[self.handle],[], self.timeout) == ([],[],[]):
-                raise IOError("Timed out waiting for write")
-
-        self.handle.write(
-            "\x1e%s\n" % (text.translate(string.maketrans('', ''), "\n"))
-        )
-        self.handle.flush()
+#         self.handle = handle
+#         self.timeout = timeout
 
 
-    def __call__(self, json):
-        """Emit serialized JSON to the file"""
-        self.emit_text(pscheduler.json_dump(json, pretty=False))
+#     def emit_text(self, text):
+#         """Emit straight text to the file"""
+
+#         if self.timeout is not None:
+#             if polled_select([],[self.handle],[], self.timeout) == ([],[],[]):
+#                 raise IOError("Timed out waiting for write")
+
+#         self.handle.write(
+#             "\x1e%s\n" % (text.translate(string.maketrans('', ''), "\n"))
+#         )
+#         self.handle.flush()
+
+
+#     def __call__(self, json):
+#         """Emit serialized JSON to the file"""
+#         self.emit_text(pscheduler.json_dump(json, pretty=False))
 
 
 
 
-class RFC7464Parser(object):
-    """Iterable parser for reading streaming JSON from a file handle"""
+# class RFC7464Parser(object):
+#     """Iterable parser for reading streaming JSON from a file handle"""
 
-    def __init__(self, handle, timeout=None):
-        if type(handle) != file:
-            raise TypeError("Handle must be a file.")
-        self.handle = handle
-        self.timeout = timeout
+#     def __init__(self, handle, timeout=None):
+#         if type(handle) != file:
+#             raise TypeError("Handle must be a file.")
+#         self.handle = handle
+#         self.timeout = timeout
 
-    # PYTHON3: def __next__(self)
-    def __next__(self):
-        """Read and parse one item from the file"""
-        if self.timeout is not None:
-            if polled_select([self.handle],[],[], self.timeout) == ([],[],[]):
-                raise IOError("Timed out waiting for read")
-        data = self.handle.readline()
+#     # PYTHON3: def __next__(self)
+#     def __next__(self):
+#         """Read and parse one item from the file"""
+#         if self.timeout is not None:
+#             if polled_select([self.handle],[],[], self.timeout) == ([],[],[]):
+#                 raise IOError("Timed out waiting for read")
+#         data = self.handle.readline()
 
-        if len(data) == 0:
-            raise StopIteration
+#         if len(data) == 0:
+#             raise StopIteration
 
-        if data[0] != b'\x1e':
-            raise ValueError("Line '%s' did not start with record separator" % (data))
+#         if data[0] != b'\x1e':
+#             raise ValueError("Line '%s' did not start with record separator" % (data))
 
-        # json_load() will raise a ValueError if something's not right.
-        return pscheduler.json_load(data[1:])
-
-
-    def __iter__(self):
-        return self
+#         # json_load() will raise a ValueError if something's not right.
+#         return pscheduler.json_load(data[1:])
 
 
-    def __call__(self):
-        """Single-shot read of next item"""
-        return next(self)
+#     def __iter__(self):
+#         return self
+
+
+#     def __call__(self):
+#         """Single-shot read of next item"""
+#         return next(self)
