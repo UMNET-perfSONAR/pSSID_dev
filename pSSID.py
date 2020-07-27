@@ -304,13 +304,14 @@ def loop_forever():
 
 
 
-            scanned_table = ssid_scan.get_all_bssids(main_obj["interface"])
+            scanned_table, scan_duration = ssid_scan.get_all_bssids(main_obj["interface"])
 
             checked_bssid, qualified_per_ssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
 
 
             bssid_list["meta"] = main_obj["meta"]
             bssid_list["operation"] = "scan"
+            bssid_list["duration"] = scan_duration
             bssid_list["SSID_bad_coverage"] = []
 
             for j in ssid_list:
