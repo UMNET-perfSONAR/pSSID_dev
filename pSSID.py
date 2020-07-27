@@ -350,7 +350,7 @@ def loop_forever():
 
 
 
-            scanned_table = ssid_scan.get_all_bssids(main_obj["interface"])
+            scanned_table, scan_duration = ssid_scan.get_all_bssids(main_obj["interface"])
 
             # #print("ssid_list", ssid_list)
 
@@ -359,6 +359,7 @@ def loop_forever():
 
             bssid_list["meta"] = main_obj["meta"]
             bssid_list["operation"] = "scan"
+            bssid_list["duration"] = scan_duration
             bssid_list["SSID_bad_coverage"] = []
 
             for j in ssid_list:
