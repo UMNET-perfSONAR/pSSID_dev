@@ -49,12 +49,28 @@ def prepare_connection(ssid, bssid, interface, auth):
     connect_msg = "Connecting to " + ssid + " on " + bssid
     syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, connect_msg)
 
-    # Defaults can be changed by input object
     paranoid = False
     pscheduler_restart = False
     apache_restart = False
     postgres_restart = False
     wait_time = 0
+
+
+    # Defaults can be changed by input object
+    if 'paranoid' in auth['connection_flags']:
+        paranoid = auth['connection_flags']['paranoid']
+
+    if 'pscheduler_restart' in auth['connection_flags']:
+        pscheduler_restart = auth['connection_flags']['pscheduler_restart']
+
+    if 'apache_restart' in auth['connection_flags']:
+        apache_restart = auth['connection_flags']['apache_restart']
+
+    if 'postgres_restart' in auth['connection_flags']:
+        postgres_restart = auth['connection_flags']['postgres_restart']
+
+    if 'wait_time' in auth['connection_flags']:
+        wait_time = auth['connection_flags']['wait_time']
 
     start_time = time.time()
 
