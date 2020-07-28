@@ -92,13 +92,13 @@
                 "type": "User",
                 "UID": "fakeUID",
                 "Password": "fakepassword",
-    		"connection_flags": {
-    		    "paranoid": false,
-    		    "pscheduler_restart": false,
-    		    "apache_restart": false,
-    		    "postgres_restart": false,
-    		    "wait_time": 0
-    		}
+        		"connection_flags": {
+        		    "paranoid": false,
+        		    "pscheduler_restart": false,
+        		    "apache_restart": false,
+        		    "postgres_restart": false,
+        		    "wait_time": 0
+        		}
             }
         },
 
@@ -112,14 +112,14 @@
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
-                "Password": "fakepassword"
-		"connection_flags": {
-		    "paranoid": false,
-		    "pscheduler_restart": false,
-		    "apache_restart": false,
-		    "postgres_restart": false,
-		    "wait_time": 0
-            }
+                "Password": "fakepassword",
+        		"connection_flags": {
+        		    "paranoid": true,
+        		    "pscheduler_restart": false,
+        		    "apache_restart": false,
+        		    "postgres_restart": false,
+        		    "wait_time": 0
+                    }
         }
     },
 
