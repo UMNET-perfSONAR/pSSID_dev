@@ -57,4 +57,9 @@ This should be removed by the connect_bssid code
 It will then bring up a default route over the wireless interface for testing
 
 There should be routes to the gateway for the bastion and the ELK Server
+
+Static routes can be added in the netplan yaml file
+/etc/netplan/50-cloud-init.yaml
+
+Or manually using ip route add
 ```
