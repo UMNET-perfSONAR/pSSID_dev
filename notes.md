@@ -3,6 +3,8 @@
 **pScheduler**
 
 ```
+pScheduler command to sure up wired interface
+
 /usr/lib/perfsonar/scripts/mod_interface_route --command add --device eth0 --ipv4_gateway 10.0.0.1
 ```
 
@@ -20,10 +22,13 @@ In the format wpa_supplicant_ssid.conf
 **Create wpa supplicant**
 
 ```
-Copy over template file
-Edit new configuration file with login info
+Copy over template file into format wpa_supplicant_SSID.conf
 
 cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant_ssid.conf
+
+Edit new configuration file with login info
+Template has slots for identity and password
+If your wifi doesn't require a username, then remove the identity field
 ```
 
 **Hash password**
