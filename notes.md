@@ -22,14 +22,14 @@ In the format wpa_supplicant_ssid.conf
 ```
 Copy over template file
 
-`cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant_ssid.conf`
+cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant_ssid.conf
 ```
 
 **Hash password**
 ```
-`echo -n plaintext_password_here | iconv -t utf16le | openssl md4`
+echo -n plaintext_password_here | iconv -t utf16le | openssl md4
 
 This password can replace password field in wpa_supplicant with the hash prefix
 
-`password=hash:hashed_password`
+password=hash:hashed_password
 ```
