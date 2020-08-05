@@ -21,6 +21,7 @@ In the format wpa_supplicant_ssid.conf
 
 ```
 Copy over template file
+Edit new configuration file with login info
 
 cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant_ssid.conf
 ```
@@ -32,4 +33,28 @@ echo -n plaintext_password_here | iconv -t utf16le | openssl md4
 This password can replace password field in wpa_supplicant with the hash prefix
 
 password=hash:hashed_password
+```
+
+**Test pScheduler**
+```
+pscheduler ping ip_wireless_interface
+pscheduler ping ip_wired_interface
+
+Should come back quickly saying pscheduler is alive
+```
+
+**pScheduler over the wire**
+```
+pscheduler task --bind wire_ip \
+throughput --source wire_ip \
+--dest throughput_server
+```
+
+**Routes**
+```
+When the pi comes up the wired interface will have the default route
+This should be removed by the connect_bssid code
+It will then bring up a default route over the wireless interface for testing
+
+There should be routes to the gateway for the bastion and the ELK Server
 ```
