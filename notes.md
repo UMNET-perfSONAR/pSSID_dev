@@ -3,7 +3,7 @@
 **pScheduler**
 
 ```
-/usr/lib/perfsonar/scripts/mod_interface_route --command add --device wired_dev_name --ipv4_gateway gateway_ip
+/usr/lib/perfsonar/scripts/mod_interface_route --command add --device eth0 --ipv4_gateway 10.0.0.1
 ```
 
 **Connecting to Wireless**
@@ -62,4 +62,16 @@ Static routes can be added in the netplan yaml file
 /etc/netplan/50-cloud-init.yaml
 
 Or manually using ip route add
+```
+
+**Scanning**
+```
+To manually scan you can run
+
+iwlist wlan0 s
+
+This will return objects for all bssids
+If it does not the interface may be down
+
+ip link set wlan0 up
 ```
